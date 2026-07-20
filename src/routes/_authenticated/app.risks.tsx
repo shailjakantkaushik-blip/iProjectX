@@ -1,168 +1,192 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
-import { PageHeading, SectionFrame, SectionTitle, KpiCard, RagChip } from "@/components/streamlit";
+import { Fragment, useMemo, useState } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip,
-  PieChart, Pie, Cell, Legend, ScatterChart, Scatter, ZAxis,
+  Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+import { useAuth } from "@/lib/auth-context";
+import { riskBand, useDomainData } from "@/lib/domain";
+import {
+  ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton, RagChip,
+  SectionFrame, SectionTitle, StatusChip,
+} from "@/components/streamlit";
+import { exportPageCsv } from "@/lib/ppt-export";
 
 export const Route = createFileRoute("/_authenticated/app/risks")({
   component: RisksPage,
 });
 
-const RAG_COLORS: Record<string, string> = { Green: "#15803d", Amber: "#f59e0b", Red: "#dc2626" };
-const PRIO_SCORE: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 };
-const RAG_SCORE: Record<string, number> = { Red: 3, Amber: 2, Green: 1 };
-
 function RisksPage() {
   const { organization } = useAuth();
-  const { data: projects = [], isLoading } = useQuery({
-    queryKey: ["projects", organization?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!organization,
-  });
+  const { risks, isLoading, projects } = useDomainData(organization?.id);
+  const [projectFilter, setProjectFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
 
-  const risky = projects.filter((p) => p.rag === "Red" || p.rag === "Amber");
-  const red = projects.filter((p) => p.rag === "Red").length;
-  const amber = projects.filter((p) => p.rag === "Amber").length;
-  const green = projects.filter((p) => p.rag === "Green").length;
-  const criticalOverdue = projects.filter(
-    (p) => p.priority === "Critical" && p.end_date && new Date(p.end_date) < new Date() && p.status !== "Completed",
-  ).length;
+  const filtered = useMemo(() => {
+    return risks.filter((r) => {
+      if (projectFilter !== "All" && r.project_name !== projectFilter) return false;
+      if (statusFilter !== "All" && r.status !== statusFilter) return false;
+      return true;
+    });
+  }, [risks, projectFilter, statusFilter]);
 
-  const ragData = [
-    { name: "Green", value: green },
-    { name: "Amber", value: amber },
-    { name: "Red", value: red },
-  ].filter((d) => d.value > 0);
+  const high = filtered.filter((r) => r.score >= 40).length;
+  const medium = filtered.filter((r) => r.score >= 25 && r.score < 40).length;
+  const low = filtered.filter((r) => r.score < 25).length;
+  const overdue = filtered.filter((r) => r.due_date && new Date(r.due_date) < new Date() && r.status === "Open").length;
 
-  const byProgram = Array.from(
-    projects.reduce((m: Map<string, { program: string; red: number; amber: number; green: number }>, p) => {
-      const k = p.program || "Unassigned";
-      const cur = m.get(k) || { program: k, red: 0, amber: 0, green: 0 };
-      if (p.rag === "Red") cur.red++;
-      else if (p.rag === "Amber") cur.amber++;
-      else if (p.rag === "Green") cur.green++;
-      m.set(k, cur);
-      return m;
-    }, new Map()).values(),
-  );
+  const heatmap = useMemo(() => {
+    const grid: { p: number; i: number; count: number }[] = [];
+    for (let p = 1; p <= 5; p++) for (let i = 1; i <= 5; i++) grid.push({ p, i, count: 0 });
+    for (const r of filtered) {
+      const cell = grid.find((c) => c.p === r.probability && c.i === r.impact);
+      if (cell) cell.count++;
+    }
+    return grid;
+  }, [filtered]);
 
-  const heatmap = projects
-    .filter((p) => p.priority && p.rag)
-    .map((p) => ({
-      x: PRIO_SCORE[p.priority as string] || 1,
-      y: RAG_SCORE[p.rag as string] || 1,
-      z: Number(p.budget || 0),
-      name: p.name,
-    }));
+  const top10 = [...filtered].sort((a, b) => b.score - a.score).slice(0, 10).map((r) => ({
+    name: r.title.length > 28 ? r.title.slice(0, 28) + "…" : r.title,
+    score: r.score,
+  }));
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div>
-      <PageHeading icon="⚠️">Risk Intelligence</PageHeading>
+      <PageHeading
+        icon="⚠️"
+        title="Risk Intelligence"
+        subtitle="P × I × Velocity scoring · Red ≥50 · Amber 25–49 · Green <25"
+      />
 
-      <SectionFrame>
-        <SectionTitle>Risk KPIs</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <KpiCard label="Red" value={red} />
-          <KpiCard label="Amber" value={amber} />
-          <KpiCard label="Green" value={green} />
-          <KpiCard label="At-Risk" value={risky.length} />
-          <KpiCard label="Critical Overdue" value={criticalOverdue} />
+      <SectionFrame title="Filters">
+        <div className="flex flex-wrap gap-3">
+          <select className="h-9 rounded-md border border-border bg-surface px-2 text-sm" value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+            <option>All</option>
+            {[...new Set(risks.map((r) => r.project_name).filter(Boolean))].map((p) => (
+              <option key={p}>{p}</option>
+            ))}
+          </select>
+          <select className="h-9 rounded-md border border-border bg-surface px-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option>All</option>
+            {[...new Set(risks.map((r) => r.status))].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
         </div>
       </SectionFrame>
 
-      <SectionFrame>
-        <SectionTitle>Risk Distribution</SectionTitle>
-        {isLoading ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <ChartBox title="RAG Split">
-              <PieChart>
-                <Pie data={ragData} dataKey="value" nameKey="name" outerRadius={70} label>
-                  {ragData.map((e) => <Cell key={e.name} fill={RAG_COLORS[e.name]} />)}
-                </Pie>
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Tooltip />
-              </PieChart>
-            </ChartBox>
-
-            <ChartBox title="RAG by Program">
-              <BarChart data={byProgram}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.08)" />
-                <XAxis dataKey="program" fontSize={10} />
-                <YAxis allowDecimals={false} fontSize={10} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="red" stackId="a" fill="#dc2626" />
-                <Bar dataKey="amber" stackId="a" fill="#f59e0b" />
-                <Bar dataKey="green" stackId="a" fill="#15803d" />
-              </BarChart>
-            </ChartBox>
-
-            <ChartBox title="Priority × RAG (bubble = budget)">
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.08)" />
-                <XAxis dataKey="x" name="Priority" fontSize={10} type="number" domain={[0, 5]}
-                  ticks={[1, 2, 3, 4]} tickFormatter={(v) => ["", "Low", "Med", "High", "Crit"][v] || ""} />
-                <YAxis dataKey="y" name="RAG" fontSize={10} type="number" domain={[0, 4]}
-                  ticks={[1, 2, 3]} tickFormatter={(v) => ["", "G", "A", "R"][v] || ""} />
-                <ZAxis dataKey="z" range={[40, 400]} />
-                <Tooltip cursor={{ strokeDasharray: "3 3" }} formatter={(v: any, n) => n === "z" ? `$${Number(v).toLocaleString()}` : v} />
-                <Scatter data={heatmap} fill="#1d4ed8" />
-              </ScatterChart>
-            </ChartBox>
-          </div>
-        )}
+      <SectionFrame title="Risk KPIs">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <KpiCard label="Total Risks" value={filtered.length} />
+          <KpiCard label="High (≥40)" value={high} accent="#dc2626" />
+          <KpiCard label="Medium" value={medium} accent="#f59e0b" />
+          <KpiCard label="Low" value={low} accent="#16a34a" />
+          <KpiCard label="Overdue Mitigations" value={overdue} accent="#dc2626" />
+        </div>
       </SectionFrame>
 
-      <SectionFrame>
-        <SectionTitle>At-Risk Register ({risky.length})</SectionTitle>
-        {risky.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">No projects flagged Amber or Red 🎉</div>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <SectionFrame>
+          <ChartCaption title="Probability × Impact heatmap" caption="Cell colour green→red; number = risk count">
+            <div className="grid grid-cols-6 gap-1 text-center text-[11px]">
+              <div />
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="font-semibold text-muted-foreground">I{i}</div>
+              ))}
+              {[5, 4, 3, 2, 1].map((p) => (
+                <Fragment key={p}>
+                  <div className="flex items-center justify-center font-semibold text-muted-foreground">P{p}</div>
+                  {[1, 2, 3, 4, 5].map((i) => {
+                    const cell = heatmap.find((c) => c.p === p && c.i === i)!;
+                    const intensity = Math.min(1, cell.count / 3);
+                    const bg = cell.count === 0
+                      ? "#f1f5f9"
+                      : `color-mix(in srgb, #dc2626 ${Math.round(20 + intensity * 70)}%, #16a34a)`;
+                    return (
+                      <div
+                        key={`${p}-${i}`}
+                        className="flex h-10 items-center justify-center rounded-md font-bold text-heading"
+                        style={{ background: bg }}
+                      >
+                        {cell.count || ""}
+                      </div>
+                    );
+                  })}
+                </Fragment>
+              ))}
+            </div>
+          </ChartCaption>
+        </SectionFrame>
+
+        <SectionFrame>
+          <ChartCaption title="Top 10 risks by score" caption="Score = Probability × Impact × Velocity">
+            <div className="h-[320px]">
+              <ResponsiveContainer>
+                <BarChart data={top10} layout="vertical" margin={{ left: 8, right: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.10)" />
+                  <XAxis type="number" fontSize={11} />
+                  <YAxis type="category" dataKey="name" width={140} fontSize={10} />
+                  <Tooltip />
+                  <Bar dataKey="score" radius={4}>
+                    {top10.map((d) => (
+                      <Cell key={d.name} fill={d.score >= 50 ? "#dc2626" : d.score >= 25 ? "#f59e0b" : "#16a34a"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCaption>
+        </SectionFrame>
+      </div>
+
+      <SectionFrame title={`Risk register (${filtered.length})`}>
+        {filtered.length === 0 ? (
+          <EmptyState title="No risks" description="Risks appear once projects are loaded or the risks table is seeded." />
         ) : (
           <div className="overflow-x-auto">
             <table className="st-table">
               <thead>
                 <tr>
-                  <th>Project</th><th>Program</th><th>Sponsor</th><th>Priority</th>
-                  <th>RAG</th><th>Status</th><th>End Date</th><th className="text-right">Budget</th>
+                  <th>Score</th><th>Title</th><th>Project</th><th>P</th><th>I</th><th>V</th>
+                  <th>Owner</th><th>Mitigation</th><th>Status</th><th>Due</th>
                 </tr>
               </thead>
               <tbody>
-                {risky.map((p) => (
-                  <tr key={p.id}>
-                    <td className="font-medium">{p.name}</td>
-                    <td>{p.program || "—"}</td>
-                    <td>{p.sponsor || "—"}</td>
-                    <td>{p.priority || "—"}</td>
-                    <td><RagChip rag={p.rag} /></td>
-                    <td>{p.status}</td>
-                    <td>{p.end_date || "—"}</td>
-                    <td className="text-right tabular-nums">${Number(p.budget || 0).toLocaleString()}</td>
-                  </tr>
-                ))}
+                {filtered
+                  .slice()
+                  .sort((a, b) => b.score - a.score)
+                  .map((r) => (
+                    <tr key={r.id}>
+                      <td><RagChip rag={riskBand(r.score)} label={String(r.score)} /></td>
+                      <td className="font-medium">{r.title}</td>
+                      <td>{r.project_name || "—"}</td>
+                      <td>{r.probability}</td>
+                      <td>{r.impact}</td>
+                      <td>{r.velocity}</td>
+                      <td>{r.owner || "—"}</td>
+                      <td className="max-w-[200px] truncate">{r.mitigation || "—"}</td>
+                      <td><StatusChip status={r.status} /></td>
+                      <td>{r.due_date || "—"}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
         )}
+        <ExportBar
+          onCsv={() =>
+            exportPageCsv(
+              "risks.csv",
+              filtered.map((r) => ({
+                score: r.score, title: r.title, project: r.project_name, probability: r.probability,
+                impact: r.impact, velocity: r.velocity, owner: r.owner, status: r.status, due_date: r.due_date,
+              })),
+            )
+          }
+        />
       </SectionFrame>
-    </div>
-  );
-}
-
-function ChartBox({ title, children }: { title: string; children: React.ReactElement }) {
-  return (
-    <div className="rounded-md border border-border bg-surface p-2">
-      <div className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</div>
-      <div className="h-56"><ResponsiveContainer>{children}</ResponsiveContainer></div>
+      <p className="text-[11px] text-muted-foreground">{projects.length} projects in FY filter scope.</p>
     </div>
   );
 }

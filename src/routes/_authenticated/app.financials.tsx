@@ -1,159 +1,228 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
-import { PageHeading, SectionFrame, SectionTitle, KpiCard } from "@/components/streamlit";
+import { useMemo, useState } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip, Legend,
-  LineChart, Line,
+  Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+import { useAuth } from "@/lib/auth-context";
+import { useDomainData } from "@/lib/domain";
+import { fmtMoney } from "@/lib/portfolio-engine";
+import {
+  ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton, SectionFrame,
+} from "@/components/streamlit";
+import { exportPageCsv } from "@/lib/ppt-export";
 
 export const Route = createFileRoute("/_authenticated/app/financials")({
   component: FinancialsPage,
 });
 
-const money = (n: number) =>
-  "$" + new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 }).format(n || 0);
-
 function FinancialsPage() {
   const { organization } = useAuth();
-  const { data: projects = [] } = useQuery({
-    queryKey: ["projects", organization?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!organization,
-  });
+  const { projects, isLoading } = useDomainData(organization?.id);
+  const [selectedId, setSelectedId] = useState<string>("");
 
-  const capexApproved = projects.reduce((s, p) => s + Number(p.capex_approved || 0), 0);
-  const capexIncurred = projects.reduce((s, p) => s + Number(p.capex_incurred || 0), 0);
-  const opexApproved = projects.reduce((s, p) => s + Number(p.opex_approved || 0), 0);
-  const opexIncurred = projects.reduce((s, p) => s + Number(p.opex_incurred || 0), 0);
-  const benefitsTarget = projects.reduce((s, p) => s + Number(p.benefits_target || 0), 0);
-  const benefitsRealised = projects.reduce((s, p) => s + Number(p.benefits_realised || 0), 0);
-  const totalBudget = projects.reduce((s, p) => s + Number(p.budget || 0), 0);
-  const totalIncurred = capexIncurred + opexIncurred;
-  const totalApproved = capexApproved + opexApproved;
-  const spendPct = totalApproved > 0 ? (totalIncurred / totalApproved) * 100 : 0;
-  const cpi = totalIncurred > 0 ? (benefitsRealised || totalApproved) / totalIncurred : 0;
+  const kpis = useMemo(() => {
+    const capexApproved = projects.reduce((s, p) => s + Number(p.capex_approved || 0), 0);
+    const capexIncurred = projects.reduce((s, p) => s + Number(p.capex_incurred || 0), 0);
+    const opexApproved = projects.reduce((s, p) => s + Number(p.opex_approved || 0), 0);
+    const opexIncurred = projects.reduce((s, p) => s + Number(p.opex_incurred || 0), 0);
+    const forecast = projects.reduce((s, p) => {
+      const a = Number(p.forecast_at_completion || p.budget || 0) ||
+        Number(p.capex_approved || 0) + Number(p.opex_approved || 0);
+      const spent = Number(p.capex_incurred || 0) + Number(p.opex_incurred || 0);
+      return s + Math.max(a, spent);
+    }, 0);
+    const pv = capexApproved + opexApproved;
+    const ev = projects.reduce((s, p) => {
+      const budget = Number(p.budget || 0) || Number(p.capex_approved || 0) + Number(p.opex_approved || 0);
+      const progress = Number(p.progress_pct || 0) / 100 ||
+        (p.status === "Completed" || p.status === "Complete" ? 1 : p.rag === "Green" ? 0.55 : p.rag === "Amber" ? 0.4 : 0.25);
+      return s + budget * progress;
+    }, 0);
+    const ac = capexIncurred + opexIncurred;
+    const spi = pv > 0 ? ev / pv : 0;
+    const cpi = ac > 0 ? ev / ac : 0;
+    const eac = cpi > 0 ? pv / cpi : forecast;
+    return {
+      capexApproved,
+      capexIncurred,
+      capexForecast: forecast * (capexApproved / Math.max(1, pv)),
+      opexApproved,
+      opexIncurred,
+      variance: pv - forecast,
+      spi,
+      cpi,
+      eac,
+      pv,
+      ev,
+      ac,
+    };
+  }, [projects]);
 
-  const byProgram = Array.from(
-    projects.reduce((m: Map<string, any>, p) => {
-      const k = p.program || "Unassigned";
-      const cur = m.get(k) || { program: k, capex: 0, opex: 0, incurred: 0, budget: 0 };
+  const byBu = useMemo(() => {
+    const m = new Map<string, { name: string; capex: number; opex: number }>();
+    for (const p of projects) {
+      const name = p.program || "Unassigned";
+      const cur = m.get(name) || { name, capex: 0, opex: 0 };
       cur.capex += Number(p.capex_approved || 0);
       cur.opex += Number(p.opex_approved || 0);
-      cur.incurred += Number(p.capex_incurred || 0) + Number(p.opex_incurred || 0);
-      cur.budget += Number(p.budget || 0);
-      m.set(k, cur);
-      return m;
-    }, new Map()).values(),
-  );
+      m.set(name, cur);
+    }
+    return [...m.values()];
+  }, [projects]);
 
-  const runRate = projects
-    .filter((p) => p.start_date)
-    .slice(0, 12)
-    .map((p) => ({
-      name: (p.name || "").slice(0, 12),
-      capex: Number(p.capex_incurred || 0),
-      opex: Number(p.opex_incurred || 0),
-    }));
+  const selected = projects.find((p) => p.id === selectedId) || projects[0];
+
+  const evmCurve = useMemo(() => {
+    if (!selected) return [];
+    const budget = Number(selected.budget || 0) ||
+      Number(selected.capex_approved || 0) + Number(selected.opex_approved || 0);
+    const actual = Number(selected.capex_incurred || 0) + Number(selected.opex_incurred || 0);
+    const months = ["M1", "M2", "M3", "M4", "M5", "M6"];
+    return months.map((m, i) => {
+      const t = (i + 1) / months.length;
+      return {
+        month: m,
+        PV: Math.round(budget * t),
+        EV: Math.round(budget * t * (selected.rag === "Red" ? 0.75 : selected.rag === "Amber" ? 0.9 : 1.0)),
+        AC: Math.round(actual * Math.min(1, t * 1.1)),
+      };
+    });
+  }, [selected]);
+
+  const roiTable = useMemo(() => {
+    return [...projects]
+      .map((p) => {
+        const cost = Number(p.budget || 0) || Number(p.capex_approved || 0) + Number(p.opex_approved || 0) || 1;
+        const benefits = Number(p.benefits_target || 0);
+        const roi = ((benefits - cost) / cost) * 100;
+        return { id: p.id, name: p.name, cost, benefits, roi, npv: benefits - cost };
+      })
+      .sort((a, b) => b.roi - a.roi)
+      .slice(0, 20);
+  }, [projects]);
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div>
-      <PageHeading icon="💰">Financial Intelligence — CAPEX / OPEX + EVM</PageHeading>
+      <PageHeading
+        icon="💰"
+        title="Financials"
+        subtitle="CAPEX / OPEX + EVM (SPI, CPI, EAC)"
+        actions={
+          <select
+            className="h-9 rounded-md border border-border bg-surface px-2 text-sm"
+            value={selected?.id || ""}
+            onChange={(e) => setSelectedId(e.target.value)}
+          >
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        }
+      />
 
-      <SectionFrame>
-        <SectionTitle>Financial KPIs</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-          <KpiCard label="CAPEX Approved" value={money(capexApproved)} />
-          <KpiCard label="CAPEX Incurred" value={money(capexIncurred)} />
-          <KpiCard label="OPEX Approved" value={money(opexApproved)} />
-          <KpiCard label="OPEX Incurred" value={money(opexIncurred)} />
-          <KpiCard label="Total Budget" value={money(totalBudget)} />
-          <KpiCard label="Total Incurred" value={money(totalIncurred)} />
-          <KpiCard label="Spend %" value={`${spendPct.toFixed(1)}%`} />
-          <KpiCard label="Benefits Realised" value={money(benefitsRealised)} sub={`of ${money(benefitsTarget)} target`} />
+      <SectionFrame title="Money KPIs">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-9">
+          <KpiCard label="CAPEX Approved" value={fmtMoney(kpis.capexApproved)} />
+          <KpiCard label="CAPEX Incurred" value={fmtMoney(kpis.capexIncurred)} />
+          <KpiCard label="CAPEX Forecast" value={fmtMoney(kpis.capexForecast)} />
+          <KpiCard label="OPEX Approved" value={fmtMoney(kpis.opexApproved)} />
+          <KpiCard label="OPEX Incurred" value={fmtMoney(kpis.opexIncurred)} />
+          <KpiCard label="Total Variance" value={fmtMoney(kpis.variance)} accent={kpis.variance < 0 ? "#dc2626" : "#16a34a"} />
+          <KpiCard label="SPI" value={kpis.spi.toFixed(2)} accent={kpis.spi < 0.9 ? "#dc2626" : "#16a34a"} />
+          <KpiCard label="CPI" value={kpis.cpi.toFixed(2)} accent={kpis.cpi < 0.9 ? "#dc2626" : "#16a34a"} />
+          <KpiCard label="EAC" value={fmtMoney(kpis.eac)} />
         </div>
       </SectionFrame>
 
-      <SectionFrame>
-        <SectionTitle>CAPEX vs OPEX by Program</SectionTitle>
-        <div className="h-72">
-          <ResponsiveContainer>
-            <BarChart data={byProgram}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.08)" />
-              <XAxis dataKey="program" fontSize={11} />
-              <YAxis fontSize={11} tickFormatter={money} />
-              <Tooltip formatter={(v: any) => money(Number(v))} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="capex" fill="#1d4ed8" name="CAPEX Approved" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="opex" fill="#15803d" name="OPEX Approved" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="incurred" fill="#f59e0b" name="Incurred" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </SectionFrame>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <SectionFrame>
+          <ChartCaption title="CAPEX vs OPEX by Program" caption="Stacked approved funding by portfolio program">
+            <div className="h-[320px]">
+              {byBu.length === 0 ? (
+                <EmptyState title="No financials" />
+              ) : (
+                <ResponsiveContainer>
+                  <BarChart data={byBu}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.10)" />
+                    <XAxis dataKey="name" fontSize={10} />
+                    <YAxis fontSize={10} tickFormatter={(v) => fmtMoney(Number(v))} />
+                    <Tooltip formatter={(v: number) => fmtMoney(v)} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="capex" stackId="a" fill="#1d4ed8" radius={4} name="CAPEX" />
+                    <Bar dataKey="opex" stackId="a" fill="#15803d" radius={4} name="OPEX" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </ChartCaption>
+        </SectionFrame>
 
-      <SectionFrame>
-        <SectionTitle>Spend Run-Rate (top 12 projects)</SectionTitle>
-        <div className="h-64">
-          <ResponsiveContainer>
-            <LineChart data={runRate}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.08)" />
-              <XAxis dataKey="name" fontSize={10} />
-              <YAxis fontSize={11} tickFormatter={money} />
-              <Tooltip formatter={(v: any) => money(Number(v))} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="capex" stroke="#1d4ed8" strokeWidth={2} />
-              <Line type="monotone" dataKey="opex" stroke="#15803d" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </SectionFrame>
+        <SectionFrame>
+          <ChartCaption
+            title={`EVM curves — ${selected?.name || "Project"}`}
+            caption="Planned Value (PV) · Earned Value (EV) · Actual Cost (AC)"
+          >
+            <div className="h-[320px]">
+              <ResponsiveContainer>
+                <LineChart data={evmCurve}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.10)" />
+                  <XAxis dataKey="month" fontSize={11} />
+                  <YAxis fontSize={10} tickFormatter={(v) => fmtMoney(Number(v))} />
+                  <Tooltip formatter={(v: number) => fmtMoney(v)} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="PV" stroke="#1d4ed8" strokeWidth={2} />
+                  <Line type="monotone" dataKey="EV" stroke="#15803d" strokeWidth={2} />
+                  <Line type="monotone" dataKey="AC" stroke="#dc2626" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCaption>
+        </SectionFrame>
+      </div>
 
-      <SectionFrame>
-        <SectionTitle>Project Financials</SectionTitle>
+      <SectionFrame title="ROI leaderboard (top 20)">
         <div className="overflow-x-auto">
           <table className="st-table">
             <thead>
               <tr>
-                <th>Project</th><th>Program</th>
-                <th className="text-right">Budget</th>
-                <th className="text-right">CAPEX Appr.</th>
-                <th className="text-right">CAPEX Incd.</th>
-                <th className="text-right">OPEX Appr.</th>
-                <th className="text-right">OPEX Incd.</th>
+                <th>Project</th>
+                <th className="text-right">Cost</th>
                 <th className="text-right">Benefits</th>
                 <th className="text-right">ROI %</th>
+                <th className="text-right">NPV proxy</th>
               </tr>
             </thead>
             <tbody>
-              {projects.map((p) => {
-                const inc = Number(p.capex_incurred || 0) + Number(p.opex_incurred || 0);
-                const ben = Number(p.benefits_realised || 0);
-                const roi = inc > 0 ? ((ben - inc) / inc) * 100 : 0;
-                return (
-                  <tr key={p.id}>
-                    <td className="font-medium">{p.name}</td>
-                    <td>{p.program || "—"}</td>
-                    <td className="text-right tabular-nums">{money(Number(p.budget || 0))}</td>
-                    <td className="text-right tabular-nums">{money(Number(p.capex_approved || 0))}</td>
-                    <td className="text-right tabular-nums">{money(Number(p.capex_incurred || 0))}</td>
-                    <td className="text-right tabular-nums">{money(Number(p.opex_approved || 0))}</td>
-                    <td className="text-right tabular-nums">{money(Number(p.opex_incurred || 0))}</td>
-                    <td className="text-right tabular-nums">{money(ben)}</td>
-                    <td className={"text-right tabular-nums " + (roi >= 0 ? "text-green-700" : "text-red-700")}>
-                      {roi.toFixed(1)}%
-                    </td>
-                  </tr>
-                );
-              })}
+              {roiTable.map((r) => (
+                <tr key={r.id}>
+                  <td className="font-medium">{r.name}</td>
+                  <td className="text-right tabular-nums">{fmtMoney(r.cost)}</td>
+                  <td className="text-right tabular-nums">{fmtMoney(r.benefits)}</td>
+                  <td className="text-right tabular-nums" style={{ color: r.roi >= 0 ? "#16a34a" : "#dc2626" }}>
+                    {r.roi.toFixed(1)}%
+                  </td>
+                  <td className="text-right tabular-nums">{fmtMoney(r.npv)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+        <ExportBar
+          onCsv={() =>
+            exportPageCsv(
+              "financials-roi.csv",
+              roiTable.map((r) => ({
+                project: r.name,
+                cost: r.cost,
+                benefits: r.benefits,
+                roi_pct: r.roi,
+                npv: r.npv,
+              })),
+            )
+          }
+        />
       </SectionFrame>
     </div>
   );
