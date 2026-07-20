@@ -16,5 +16,5 @@ The production product is the **Next.js SaaS at the repository root**.
 ## Recommended path
 
 1. Run `supabase/schema.sql` then `supabase/sample_data_17_projects.sql` in Supabase
-2. Deploy on Vercel with Root Directory set to `platform`
+2. Deploy on Vercel project `i-project-x-fozw` with Root Directory empty
 3. Use Excel template download/upload for bulk data, not as system of record

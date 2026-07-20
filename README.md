@@ -2,18 +2,18 @@
 
 Enterprise project management and delivery SaaS (Next.js + Supabase).
 
-## Vercel
+## Vercel (use `i-project-x-fozw`)
 
-**Root Directory:** `platform`  
-**Output Directory:** must be **empty** (wrong output dir causes `404: NOT_FOUND`)  
-**Framework:** Next.js
+- **Root Directory:** empty (repo root)
+- **Framework:** Next.js
+- **Output Directory:** empty
+- Delete the old **`i-project-x`** project if you still have it
 
-Full checklist: [`platform/VERCEL.md`](platform/VERCEL.md)
+Full checklist: [`VERCEL.md`](VERCEL.md)
 
 ## Local development
 
 ```bash
-cd platform
 npm install
 npx prisma migrate dev
 npm run db:seed

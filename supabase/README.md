@@ -30,7 +30,6 @@ Prefer setting these in **Vercel → Environment Variables**.
 ## App
 
 ```bash
-cd platform
 npm install
 npx prisma generate
 npm run dev
