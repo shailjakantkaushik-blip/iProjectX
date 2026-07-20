@@ -4,12 +4,20 @@ This repo is a **TanStack Start** (Vite + Nitro) PMO app with the legacy Streaml
 
 ## Vercel
 
-1. Import GitHub repo `iProjectX` into Vercel project **`i-project-x`**.
-2. Framework: auto-detect TanStack Start / Nitro (or leave blank).
-3. Build command: `bun run build` or `npm run build`
-4. Install command: `bun install` or `npm install`
-5. Root directory: empty (repo root)
-6. Set env vars from [`.env.example`](./.env.example) for Production + Preview.
+**Use only project `i-project-x`.** Do not keep a second Git-connected project (e.g. `i-project-x-fozw`) on this repo — each push triggers both and doubles Hobby build usage / rate limits.
+
+### Keep only `i-project-x`
+1. Open [Vercel Dashboard](https://vercel.com/dashboard) → project **`i-project-x-fozw`** (or any duplicate).
+2. **Settings → Git → Disconnect** from `iProjectX` (or **Settings → General → Delete Project** if unused).
+3. Confirm **`i-project-x`** remains connected to GitHub repo `iProjectX`, production branch **`main`**.
+4. Production URL: `https://i-project-x.vercel.app`
+
+### Project settings (`i-project-x`)
+1. Framework: auto-detect TanStack Start / Nitro (or leave blank).
+2. Build command: `npm run build` (or `bun run build`)
+3. Install command: `npm install` (or `bun install`)
+4. Root directory: empty (repo root)
+5. Set env vars from [`.env.example`](./.env.example) for Production + Preview.
 
 `vite.config.ts` pins Nitro `preset: "vercel"` and exposes `NEXT_PUBLIC_*` to the client bundle.
 
