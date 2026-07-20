@@ -29,9 +29,13 @@ This repo is a **TanStack Start** (Vite + Nitro) PMO app with the legacy Streaml
 | `NEXT_PUBLIC_APP_NAME` | Product name in UI / titles |
 | `NEXT_PUBLIC_APP_URL` | Success/cancel redirect base |
 
-Apply SQL: `supabase/migrations/*.sql` in Supabase SQL Editor, then also:
+Apply SQL in Supabase SQL Editor (in order):
 
-`supabase/migrations/20260720120000_stripe_org_fields.sql`
+1. `supabase/migrations/20260720095542_fe684dfb-a86c-4dee-8677-269ef34d6e6d.sql`
+2. `supabase/migrations/20260720120000_stripe_org_fields.sql`
+3. `supabase/migrations/20260720140000_seed_sample_portfolio.sql`
+
+**Sample data not showing?** RLS only returns `public.projects` for your org. Legacy `"Project"` / Acme demo rows are invisible. Either click **Load sample portfolio** on Executive Cockpit, or run `supabase/SEED_SAMPLE_PORTFOLIO.sql` (edit the email).
 
 Auth → URL config: add `https://i-project-x.vercel.app/**` to redirect URLs.
 

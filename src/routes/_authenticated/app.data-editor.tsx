@@ -22,7 +22,7 @@ function Page() {
   const { data: projects = [], refetch } = useQuery({
     queryKey: ["projects-editor", organization?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*").order("code");
+      const { data, error } = await supabase.from("projects").select("*").order("project_code");
       if (error) throw error;
       return data;
     },

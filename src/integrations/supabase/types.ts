@@ -271,6 +271,7 @@ export type Database = {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
+      claim_orphan_projects: { Args: Record<string, never>; Returns: number }
       create_org_and_join: {
         Args: { _name: string; _slug: string }
         Returns: string
@@ -284,6 +285,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      seed_sample_portfolio: { Args: Record<string, never>; Returns: number }
     }
     Enums: {
       app_role: "admin" | "org_admin" | "bu_lead" | "pm" | "executive"

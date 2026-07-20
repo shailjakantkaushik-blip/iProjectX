@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Bar,
   BarChart,
@@ -31,6 +32,8 @@ import {
   type ProjectHealth,
   type SegmentRow,
 } from "@/lib/portfolio-engine";
+import { claimOrphanProjects, seedSamplePortfolio } from "@/lib/sample-portfolio";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: ExecutiveCockpit,
@@ -38,16 +41,42 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 function ExecutiveCockpit() {
   const { organization } = useAuth();
+  const [seeding, setSeeding] = useState(false);
 
-  const { data: projects = [], isLoading } = useQuery({
+  const {
+    data: projects = [],
+    isLoading,
+    error: loadError,
+    refetch,
+  } = useQuery({
     queryKey: ["projects", organization?.id],
     queryFn: async () => {
       const { data, error } = await supabase.from("projects").select("*");
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
     enabled: !!organization,
   });
+
+  const loadSample = async () => {
+    if (!organization) return;
+    setSeeding(true);
+    try {
+      try {
+        const claimed = await claimOrphanProjects();
+        if (claimed > 0) toast.success(`Claimed ${claimed} orphan project(s) into your org`);
+      } catch {
+        // RPC may not be applied yet — ignore
+      }
+      const { count } = await seedSamplePortfolio(organization.id);
+      toast.success(`Loaded ${count} sample projects`);
+      await refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not load sample data");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const kpis = useMemo(() => executiveKpis(projects), [projects]);
   const segments = useMemo(() => segmentSummary(projects), [projects]);
@@ -197,6 +226,38 @@ function ExecutiveCockpit() {
 
       {isLoading ? (
         <div className="py-16 text-center text-sm text-muted-foreground">Loading portfolio…</div>
+      ) : loadError ? (
+        <SectionFrame>
+          <p className="text-sm font-medium text-destructive">Couldn’t load projects</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {(loadError as Error).message}
+          </p>
+        </SectionFrame>
+      ) : projects.length === 0 ? (
+        <SectionFrame>
+          <h2 className="page-heading mb-2 text-[18px]">
+            <span>📂</span>
+            <span>No projects in your organization</span>
+          </h2>
+          <p className="mb-3 max-w-2xl text-sm text-muted-foreground">
+            The app only shows rows in <code className="rounded bg-muted px-1">public.projects</code>{" "}
+            where <code className="rounded bg-muted px-1">org_id</code> matches your signed-in org
+            (RLS). Sample data under another org — or in the legacy{" "}
+            <code className="rounded bg-muted px-1">"Project"</code> table — will not appear here.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button disabled={seeding} onClick={() => void loadSample()}>
+              {seeding ? "Loading…" : "Load sample portfolio (16 projects)"}
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/app/data-editor">Import Excel</Link>
+            </Button>
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Or run <code className="rounded bg-muted px-1">supabase/SEED_SAMPLE_PORTFOLIO.sql</code>{" "}
+            in the Supabase SQL Editor (set your email first).
+          </p>
+        </SectionFrame>
       ) : (
         <>
           <SectionTitle>Financial</SectionTitle>
