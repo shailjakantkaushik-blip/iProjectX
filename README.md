@@ -8,7 +8,8 @@ Enterprise project management and delivery SaaS (Next.js + Supabase).
 
 Use Vercel project **`i-project-x`**. Delete **`i-project-x-fozw`** (broken production domain).
 
-Deploy settings: [`VERCEL.md`](VERCEL.md)
+Deploy settings: [`VERCEL.md`](VERCEL.md)  
+Enterprise invoicing (Stripe): [`STRIPE.md`](STRIPE.md)
 
 ## Local development
 
