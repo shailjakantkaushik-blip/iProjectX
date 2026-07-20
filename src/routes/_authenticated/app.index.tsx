@@ -1,29 +1,45 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { PageHeading, SectionFrame, SectionTitle, KpiCard } from "@/components/streamlit";
+import {
+  KpiCard,
+  PageHeading,
+  RagChip,
+  SectionFrame,
+  SectionTitle,
+  SortableSheet,
+  type SheetColumn,
+} from "@/components/streamlit";
 import { useAuth } from "@/lib/auth-context";
+import {
+  budgetForecastByFy,
+  computeProjectHealth,
+  executiveKpis,
+  fmtMoney,
+  segmentSummary,
+  type ProjectHealth,
+  type SegmentRow,
+} from "@/lib/portfolio-engine";
 
 export const Route = createFileRoute("/_authenticated/app/")({
-  component: Home,
+  component: ExecutiveCockpit,
 });
 
-function money(n: number) {
-  return "$" + new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n || 0);
-}
+function ExecutiveCockpit() {
+  const { organization } = useAuth();
 
-const shortcuts = [
-  { to: "/app/executive", label: "Executive Dashboard", desc: "Portfolio cockpit — KPIs, RAG, ROI, timelines" },
-  { to: "/app/projects", label: "Projects", desc: "Register with full CRUD" },
-  { to: "/app/financials", label: "Financials", desc: "CAPEX / OPEX / benefits" },
-  { to: "/app/risks", label: "Risks", desc: "Portfolio-level risk heatmap" },
-  { to: "/app/agile", label: "Agile", desc: "Sprints, velocity, burndown" },
-  { to: "/app/stage-gates", label: "Stage Gates", desc: "Governance flow" },
-];
-
-function Home() {
-  const { organization, profile } = useAuth();
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects", organization?.id],
     queryFn: async () => {
       const { data, error } = await supabase.from("projects").select("*");
@@ -33,48 +49,250 @@ function Home() {
     enabled: !!organization,
   });
 
-  const totalBudget = projects.reduce((s, p) => s + Number(p.budget || 0), 0);
-  const active = projects.filter((p) => p.status === "In Progress").length;
-  const completed = projects.filter((p) => p.status === "Completed").length;
-  const atRisk = projects.filter((p) => p.rag === "Red" || p.rag === "Amber").length;
+  const kpis = useMemo(() => executiveKpis(projects), [projects]);
+  const segments = useMemo(() => segmentSummary(projects), [projects]);
+  const health = useMemo(() => computeProjectHealth(projects), [projects]);
+  const fy = useMemo(() => budgetForecastByFy(projects), [projects]);
+
+  const financialCards: [string, string][] = [
+    ["Total Portfolio Value", fmtMoney(kpis.totalPortfolioValue)],
+    ["Total Capex Budget", fmtMoney(kpis.totalCapexBudget)],
+    ["Total Opex Budget", fmtMoney(kpis.totalOpexBudget)],
+    ["Approved Funding", fmtMoney(kpis.approvedFunding)],
+    ["Actual Spend to Date", fmtMoney(kpis.actualSpend)],
+    ["Remaining Portfolio Budget", fmtMoney(kpis.remainingBudget)],
+    ["Forecast at Completion", fmtMoney(kpis.forecastAtCompletion)],
+  ];
+
+  const deliveryCards: [string, string][] = [
+    ["Projects on Track (%)", `${kpis.projectsOnTrackPct.toFixed(1)}%`],
+    ["Projects at Risk (%)", `${kpis.projectsAtRiskPct.toFixed(1)}%`],
+    ["Projects Delayed (%)", `${kpis.projectsDelayedPct.toFixed(1)}%`],
+    ["Total Portfolio Projects", String(kpis.totalPortfolioProjects)],
+    ["Total Active Programs", String(kpis.totalActivePrograms)],
+    ["Total Initiatives in Pipeline", String(kpis.totalInitiativesInPipeline)],
+  ];
+
+  const benefitsCards: [string, string][] = [
+    ["Benefits Forecast", fmtMoney(kpis.benefitsForecast)],
+    ["Benefits Realised", fmtMoney(kpis.benefitsRealised)],
+    ["Decisions Awaiting Approval", String(kpis.decisionsAwaiting)],
+    ["Average Actions", String(kpis.averageActions)],
+    ["Upcoming Stage Gates", String(kpis.upcomingStageGates)],
+  ];
+
+  const segmentCols: SheetColumn<SegmentRow>[] = [
+    { key: "portfolio", header: "Portfolio", sortValue: (r) => r.portfolio, cell: (r) => r.portfolio },
+    { key: "initiatives", header: "Initiatives", sortValue: (r) => r.initiatives, cell: (r) => r.initiatives },
+    {
+      key: "approved",
+      header: "Approved Funding",
+      sortValue: (r) => r.approvedFunding,
+      cell: (r) => fmtMoney(r.approvedFunding),
+    },
+    {
+      key: "spend",
+      header: "Actual Spend",
+      sortValue: (r) => r.actualSpend,
+      cell: (r) => fmtMoney(r.actualSpend),
+    },
+    {
+      key: "remaining",
+      header: "Remaining",
+      sortValue: (r) => r.remaining,
+      cell: (r) => fmtMoney(r.remaining),
+    },
+    {
+      key: "benefits",
+      header: "Benefits Forecast",
+      sortValue: (r) => r.benefitsForecast,
+      cell: (r) => fmtMoney(r.benefitsForecast),
+    },
+    { key: "green", header: "Green", sortValue: (r) => r.green, cell: (r) => r.green },
+    { key: "amber", header: "Amber", sortValue: (r) => r.amber, cell: (r) => r.amber },
+    { key: "red", header: "Red", sortValue: (r) => r.red, cell: (r) => r.red },
+  ];
+
+  const healthCols: SheetColumn<ProjectHealth>[] = [
+    {
+      key: "id",
+      header: "Project ID",
+      sortValue: (r) => r.projectId,
+      cell: (r) => (
+        <Link to="/app/projects/$id" params={{ id: r.id }} className="font-medium text-[#1d4ed8] hover:underline">
+          {r.projectId}
+        </Link>
+      ),
+    },
+    {
+      key: "name",
+      header: "Project Name",
+      sortValue: (r) => r.projectName,
+      cell: (r) => <span className="max-w-[220px] truncate inline-block align-bottom">{r.projectName}</span>,
+    },
+    {
+      key: "cat",
+      header: "Portfolio Category",
+      sortValue: (r) => r.portfolioCategory,
+      cell: (r) => r.portfolioCategory,
+    },
+    {
+      key: "channel",
+      header: "Governance Channel",
+      sortValue: (r) => r.governanceChannel,
+      cell: (r) => r.governanceChannel,
+    },
+    { key: "sponsor", header: "Sponsor", sortValue: (r) => r.sponsor, cell: (r) => r.sponsor },
+    {
+      key: "lead",
+      header: "Delivery Lead",
+      sortValue: (r) => r.deliveryLead,
+      cell: (r) => r.deliveryLead,
+    },
+    {
+      key: "progress",
+      header: "Progress %",
+      sortValue: (r) => r.progress,
+      cell: (r) => r.progress,
+    },
+    {
+      key: "sched",
+      header: "Schedule Health",
+      sortValue: (r) => r.scheduleHealth,
+      cell: (r) => <RagChip rag={r.scheduleHealth} />,
+    },
+    {
+      key: "fin",
+      header: "Financial Health",
+      sortValue: (r) => r.financialHealth,
+      cell: (r) => <RagChip rag={r.financialHealth} />,
+    },
+    {
+      key: "del",
+      header: "Delivery Health",
+      sortValue: (r) => r.deliveryHealth,
+      cell: (r) => <RagChip rag={r.deliveryHealth} />,
+    },
+    {
+      key: "ben",
+      header: "Benefit Health",
+      sortValue: (r) => r.benefitHealth,
+      cell: (r) => <RagChip rag={r.benefitHealth} />,
+    },
+    {
+      key: "rag",
+      header: "Overall RAG",
+      sortValue: (r) => r.overallRag,
+      cell: (r) => <RagChip rag={r.overallRag} />,
+    },
+  ];
 
   return (
-    <div>
-      <PageHeading icon="🏠">Welcome{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}</PageHeading>
-      <div className="mb-4 text-sm text-muted-foreground">
-        {organization?.name ?? "Your organization"} · PMO Enterprise Portfolio Cockpit
-      </div>
+    <div className="space-y-1">
+      <PageHeading icon="📊" title="Executive Cockpit" />
+      <p className="mb-4 text-sm text-muted-foreground">
+        Live data source: <strong>PMO_Master.xlsx</strong>
+        {organization?.name ? ` · ${organization.name}` : null}
+      </p>
 
-      <SectionFrame>
-        <SectionTitle>Portfolio Snapshot</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KpiCard label="Projects" value={projects.length} />
-          <KpiCard label="Active" value={active} />
-          <KpiCard label="Completed" value={completed} />
-          <KpiCard label="At Risk (Red/Amber)" value={atRisk} />
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <KpiCard label="Total Budget" value={money(totalBudget)} />
-          <KpiCard label="CAPEX Incurred" value={money(projects.reduce((s, p) => s + Number(p.capex_incurred || 0), 0))} />
-          <KpiCard label="Benefits Realised" value={money(projects.reduce((s, p) => s + Number(p.benefits_realised || 0), 0))} />
-        </div>
-      </SectionFrame>
+      {isLoading ? (
+        <div className="py-16 text-center text-sm text-muted-foreground">Loading portfolio…</div>
+      ) : (
+        <>
+          <SectionTitle>Financial</SectionTitle>
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+            {financialCards.map(([label, value]) => (
+              <KpiCard key={label} label={label} value={value} />
+            ))}
+          </div>
 
-      <SectionFrame>
-        <SectionTitle>Jump to</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {shortcuts.map((s) => (
-            <Link
-              key={s.to}
-              to={s.to}
-              className="block rounded-md border border-border bg-surface p-3 transition-colors hover:border-primary hover:bg-secondary"
-            >
-              <div className="text-sm font-semibold text-foreground">{s.label}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{s.desc}</div>
-            </Link>
-          ))}
-        </div>
-      </SectionFrame>
+          <SectionTitle>Delivery</SectionTitle>
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {deliveryCards.map(([label, value]) => (
+              <KpiCard key={label} label={label} value={value} />
+            ))}
+          </div>
+
+          <SectionTitle>Benefits &amp; Governance</SectionTitle>
+          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {benefitsCards.map(([label, value]) => (
+              <KpiCard key={label} label={label} value={value} />
+            ))}
+          </div>
+
+          <SectionFrame>
+            <h2 className="page-heading mb-3 text-[18px]">
+              <span>🗂️</span>
+              <span>Portfolio Segmentation</span>
+            </h2>
+            <SortableSheet
+              rows={segments}
+              columns={segmentCols}
+              rowKey={(r) => r.portfolio}
+              initialSortKey="portfolio"
+            />
+          </SectionFrame>
+
+          <SectionFrame>
+            <h2 className="page-heading mb-3 text-[18px]">
+              <span>🚦</span>
+              <span>Portfolio Health Snapshot</span>
+            </h2>
+            <SortableSheet
+              rows={health}
+              columns={healthCols}
+              rowKey={(r) => r.id}
+              initialSortKey="id"
+              maxRows={40}
+            />
+          </SectionFrame>
+
+          <SectionFrame>
+            <h2 className="page-heading mb-3 text-[18px]">
+              <span>📅</span>
+              <span>Budget &amp; Forecast by Financial Year</span>
+            </h2>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
+              <div className="min-h-[280px] rounded-md border border-border bg-surface p-3">
+                <div className="mb-2 text-sm font-semibold text-heading">Budget vs Forecast by FY</div>
+                {fy.series.length === 0 ? (
+                  <div className="flex h-[240px] items-center justify-center text-sm text-muted-foreground">
+                    No FY dates on projects yet — set start/end dates to populate this chart.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={fy.series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <XAxis dataKey="fy" tick={{ fontSize: 12 }} />
+                      <YAxis
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v) => fmtMoney(Number(v))}
+                        width={64}
+                      />
+                      <Tooltip formatter={(v: number) => fmtMoney(v)} />
+                      <Legend />
+                      <Bar dataKey="budget" name="Budget" fill="#1d4ed8" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="forecast" name="Forecast" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+              <div className="space-y-3">
+                <KpiCard
+                  label="Projects with FY allocation"
+                  value={`${fy.allocatedProjects}/${projects.length}`}
+                />
+                <KpiCard label="Allocation coverage" value={`${fy.coveragePct}%`} />
+              </div>
+            </div>
+          </SectionFrame>
+
+          <div className="mt-2 rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3 text-sm text-[#1e3a8a]">
+            👈 Use the sidebar to open Segmentation, Governance Channels, Stage Gates, Decisions,
+            Actions, Benefits, Prioritisation, Project Infographic, FY Allocation, and more.
+          </div>
+        </>
+      )}
     </div>
   );
 }
