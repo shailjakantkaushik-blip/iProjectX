@@ -14,7 +14,8 @@
     "env:pull": "npx vercel env pull .env.local --yes",
     "env:pull:development": "npx vercel env pull .env.local --environment=development --yes",
     "env:pull:preview": "npx vercel env pull .env.local --environment=preview --yes",
-    "env:pull:production": "npx vercel env pull .env.local --environment=production --yes"
+    "env:pull:production": "npx vercel env pull .env.local --environment=production --yes",
+    "demo:users": "tsx scripts/ensure-demo-users.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

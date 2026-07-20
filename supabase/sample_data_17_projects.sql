@@ -110,7 +110,8 @@ on conflict (id) do update set
   "updatedAt" = now();
 
 -- Supabase Auth users (password: demo1234)
--- Uses pgcrypto crypt() so Auth can verify the password.
+-- Use a precomputed bcrypt ($2a$ cost 10). Raw crypt()/gen_salt often fails GoTrue checks.
+-- If login still fails later, run fix_demo_password.sql
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
@@ -120,7 +121,7 @@ insert into auth.users (
   '00000000-0000-0000-0000-000000000000',
   '11111111-1111-4111-8111-111111111111',
   'authenticated', 'authenticated', 'demo@iprojectx.com',
-  crypt('demo1234', gen_salt('bf')),
+  '$2a$10$QnSkGSgN8anboiDyJ7rFCO1nQsM7rtPfyJ1Q4EpKH4yA7HIZDm60O',
   now(),
   '{"provider":"email","providers":["email"]}',
   '{"name":"Alex Morgan"}',
@@ -130,7 +131,7 @@ insert into auth.users (
   '00000000-0000-0000-0000-000000000000',
   '22222222-2222-4222-8222-222222222222',
   'authenticated', 'authenticated', 'exec@iprojectx.com',
-  crypt('demo1234', gen_salt('bf')),
+  '$2a$10$QnSkGSgN8anboiDyJ7rFCO1nQsM7rtPfyJ1Q4EpKH4yA7HIZDm60O',
   now(),
   '{"provider":"email","providers":["email"]}',
   '{"name":"Jordan Lee"}',

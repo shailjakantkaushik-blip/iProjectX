@@ -43,3 +43,12 @@ npm run dev
 |-------|----------|--------|
 | `demo@iprojectx.com` | `demo1234` | Owner + Platform Admin |
 | `exec@iprojectx.com` | `demo1234` | Executive |
+
+### If login says invalid credentials
+
+1. Supabase → **Authentication → Providers → Email** → turn **Confirm email OFF**
+2. Run [`fix_demo_password.sql`](./fix_demo_password.sql) in the SQL Editor  
+   (resets both demo passwords to `demo1234` with a GoTrue-compatible hash)
+3. Or with service role locally: `npm run env:pull && npm run demo:users`
+
+Also disable **Leaked password protection** temporarily if Supabase rejects `demo1234`.
