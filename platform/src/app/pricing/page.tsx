@@ -5,26 +5,32 @@ import { db } from "@/lib/db";
 import { priceLabel } from "@/lib/plans";
 import { Check } from "lucide-react";
 
-export default async function PricingPage() {
-  let plans = await db.plan.findMany({ orderBy: { sortOrder: "asc" } });
-  if (!plans.length) {
-    // Fallback if DB not seeded yet
-    const { PLAN_CATALOG } = await import("@/lib/plans");
-    plans = PLAN_CATALOG.map((p, idx) => ({
-      id: String(idx),
-      slug: p.slug,
-      name: p.name,
-      description: p.description,
-      monthlyPrice: p.monthlyPrice,
-      annualPrice: p.annualPrice,
-      seatLimit: p.seatLimit,
-      projectLimit: p.projectLimit,
-      features: JSON.stringify(p.features),
-      isEnterprise: p.isEnterprise,
-      sortOrder: p.sortOrder,
-      createdAt: new Date(),
-    }));
+async function loadPlans() {
+  try {
+    const plans = await db.plan.findMany({ orderBy: { sortOrder: "asc" } });
+    if (plans.length) return plans;
+  } catch {
+    /* use catalog fallback below */
   }
+  const { PLAN_CATALOG } = await import("@/lib/plans");
+  return PLAN_CATALOG.map((p, idx) => ({
+    id: String(idx),
+    slug: p.slug,
+    name: p.name,
+    description: p.description,
+    monthlyPrice: p.monthlyPrice,
+    annualPrice: p.annualPrice,
+    seatLimit: p.seatLimit,
+    projectLimit: p.projectLimit,
+    features: JSON.stringify(p.features),
+    isEnterprise: p.isEnterprise,
+    sortOrder: p.sortOrder,
+    createdAt: new Date(),
+  }));
+}
+
+export default async function PricingPage() {
+  const plans = await loadPlans();
 
   return (
     <div className="app-shell">

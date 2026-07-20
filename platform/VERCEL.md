@@ -1,21 +1,18 @@
 # Vercel deployment
 
-The Next.js app is at the **repository root**.
+The Next.js app lives in the **`platform/`** folder.
 
-## Root Directory
+## Root Directory (required)
 
 In Vercel → Settings → General → **Root Directory**:
 
-- Leave **empty** / default (`.`)
-- Do **not** set `platform` anymore (that folder was removed)
-
-Then **Redeploy**.
-
-## Framework
-
+- Set to: `platform`
 - Framework Preset: **Next.js**
 - Output Directory: **leave empty**
-- Build Command: default (`npx prisma generate && next build` via `vercel.json` / package.json)
+
+Then **Redeploy** (uncheck “Use existing Build Cache” if the last deploy failed).
+
+If Root Directory is empty or wrong, Vercel shows `404: NOT_FOUND`.
 
 ## Environment variables
 
@@ -35,4 +32,4 @@ Settings → Environment Variables (Production + Preview):
 curl https://YOUR_APP.vercel.app/api/health
 ```
 
-You should see `"ok": true` (once env vars are set), and `/` / `/login` should load.
+You should see JSON with `"ok": true` once env vars are set. `/` and `/login` should load.
