@@ -5,9 +5,9 @@
 | Step | File | Purpose |
 |------|------|---------|
 | 1 | [`schema.sql`](./schema.sql) | App tables |
-| 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | 17 projects + **Supabase Auth** demo users |
+| 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | 17 projects + Supabase Auth demo users |
 
-## App environment (`platform/.env`)
+## App environment (Vercel or local `.env.local`)
 
 ```env
 DATABASE_URL="postgresql://postgres.YOUR_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true"
@@ -21,28 +21,16 @@ NEXT_PUBLIC_APP_NAME="iProjectX"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-Keys: **Supabase → Project Settings → API**  
-DB URIs: **Project Settings → Database**
+Prefer setting these in **Vercel → Environment Variables**.
 
-## Auth settings (recommended for demo)
+## Auth (demo)
 
-**Authentication → Providers → Email**
+**Authentication → Providers → Email** → turn **Confirm email** OFF for easy demo login.
 
-- Enable Email provider  
-- For local/demo: turn **Confirm email** **OFF** so signup/login works immediately  
-
-## Prisma
-
-```prisma
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-```
+## App
 
 ```bash
-cd platform
+npm install
 npx prisma generate
 npm run dev
 ```
@@ -53,5 +41,3 @@ npm run dev
 |-------|----------|--------|
 | `demo@iprojectx.com` | `demo1234` | Owner + Platform Admin |
 | `exec@iprojectx.com` | `demo1234` | Executive |
-
-Auth is handled by **Supabase Auth**. App tables store org membership / RBAC only (no `AUTH_SECRET` cookie sessions).

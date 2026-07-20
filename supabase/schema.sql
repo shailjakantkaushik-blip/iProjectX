@@ -7,10 +7,9 @@
 --
 -- After running:
 -- 1. Project Settings → Database → copy connection string (URI)
--- 2. Set in platform/.env:
---      DATABASE_URL="postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
---      DIRECT_URL="postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres"
--- 3. In prisma/schema.prisma set provider = "postgresql"
+-- 2. Set env vars in Vercel (or local .env.local):
+--      DATABASE_URL / DIRECT_URL / NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
+-- 3. In prisma/schema.prisma set provider = "postgresql" when using Supabase
 -- 4. npx prisma generate && npm run dev
 -- ============================================================================
 

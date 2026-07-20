@@ -1,59 +1,41 @@
 # iProjectX
 
-Enterprise project management and delivery platform.
+Enterprise project management and delivery SaaS (Next.js + Supabase).
 
-## Product direction
+## Vercel
 
-iProjectX is evolving from a local Streamlit + Excel PMO tool into a **multi-tenant SaaS web platform** with:
+**Root Directory:** leave as **`.`** (repo root) — the Next.js app is now at the root.
 
-- Modern interactive web UI
-- Organization workspaces and role-based access
-- Seat-based subscription plans
-- White-label branding per enterprise customer
-- Full portfolio / delivery / finance / governance modules
+Set env vars in Vercel → Settings → Environment Variables. See [`VERCEL.md`](VERCEL.md).
 
-## Start here (new SaaS platform)
+## Local development
 
 ```bash
-cd platform
 npm install
-npx prisma migrate dev
-npm run db:seed
+npx prisma migrate dev   # or use Supabase SQL
+npm run db:seed          # optional local seed
 npm run dev
 ```
 
-- App: http://localhost:3000
-- Demo login: `demo@iprojectx.com` / `demo1234` (also Platform Admin)
-
-### Supabase (recommended production DB)
-
-In Supabase **SQL Editor**, copy/paste/run in order:
-
-1. [`supabase/schema.sql`](supabase/schema.sql) — create tables  
-2. [`supabase/sample_data_17_projects.sql`](supabase/sample_data_17_projects.sql) — seed **17 projects** + demo users  
-
-### Vercel deploy
-
-**Critical:** Vercel → Settings → General → **Root Directory = `platform`**
-
-- Wrong root → `404: NOT_FOUND` or `No Next.js version detected`
-- Correct root → builds `platform/package.json` (includes `next`)
-
-Env vars: Vercel → Settings → Environment Variables.  
-Guide: [`platform/VERCEL.md`](platform/VERCEL.md).
-
-- Demo: `demo@iprojectx.com` / `demo1234` (Supabase Auth)  
-- Use **Data & Exports** for Excel + PPT/PDF  
-- Use **Platform Admin** for landing page / global feature flags  
-
-See [`platform/README.md`](platform/README.md) for full SaaS documentation.
-
-## Legacy Streamlit app (reference)
-
-The original local/desktop-oriented Streamlit application remains in the repository root (`app.py`, `pages/`, `utils/`, `data/PMO_Master.xlsx`) for domain reference and migration continuity.
+If using Vercel env sync:
 
 ```bash
-pip install -r requirements.txt
-python generate_master.py
-streamlit run app.py
+npx vercel link
+npm run env:pull
+npm run dev
 ```
+
+Demo (after Supabase sample SQL): `demo@iprojectx.com` / `demo1234`
+
+## Supabase
+
+Run in SQL Editor (order matters):
+
+1. [`supabase/schema.sql`](supabase/schema.sql)
+2. [`supabase/sample_data_17_projects.sql`](supabase/sample_data_17_projects.sql)
+
+Setup: [`supabase/README.md`](supabase/README.md)
+
+## Legacy Streamlit app
+
+The original Excel/Streamlit tool is in [`legacy/`](legacy/).
