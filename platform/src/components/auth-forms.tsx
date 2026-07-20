@@ -82,6 +82,12 @@ export function SignupForm({ defaultPlan = "professional" }: { defaultPlan?: str
       setError(data.error || "Signup failed");
       return;
     }
+    if (data.needsEmailConfirmation) {
+      setError("");
+      alert(data.message || "Check your email to confirm, then sign in.");
+      router.push("/login");
+      return;
+    }
     router.push("/app");
     router.refresh();
   }

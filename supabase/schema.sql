@@ -77,12 +77,26 @@ create table if not exists "User" (
   id               text primary key default gen_random_uuid()::text,
   email            text not null unique,
   name             text not null,
-  "passwordHash"   text not null,
+  "authUserId"     text unique,          -- Supabase auth.users.id
+  "passwordHash"   text,                 -- legacy / unused with Supabase Auth
   "avatarUrl"      text,
   "isPlatformAdmin" boolean not null default false,
   "createdAt"      timestamptz not null default now(),
   "updatedAt"      timestamptz not null default now()
 );
+
+-- If upgrading an existing DB that had passwordHash NOT NULL:
+do $$
+begin
+  alter table "User" alter column "passwordHash" drop not null;
+exception when others then null;
+end $$;
+
+do $$
+begin
+  alter table "User" add column if not exists "authUserId" text unique;
+exception when others then null;
+end $$;
 
 create table if not exists "Organization" (
   id                     text primary key default gen_random_uuid()::text,

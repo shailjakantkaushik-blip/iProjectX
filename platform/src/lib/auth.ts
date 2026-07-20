@@ -1,15 +1,5 @@
-import { cookies } from "next/headers";
-import { SignJWT, jwtVerify } from "jose";
-import bcrypt from "bcryptjs";
 import { db } from "./db";
-
-const COOKIE = "ipx_session";
-const TTL_DAYS = 14;
-
-function secret() {
-  const s = process.env.AUTH_SECRET || "dev-secret-change-me-please-32chars";
-  return new TextEncoder().encode(s);
-}
+import { createClient } from "@/lib/supabase/server";
 
 export type SessionPayload = {
   userId: string;
@@ -18,48 +8,24 @@ export type SessionPayload = {
   orgId: string;
   orgSlug: string;
   role: string;
+  authUserId: string;
 };
 
-export async function hashPassword(password: string) {
-  return bcrypt.hash(password, 12);
-}
-
-export async function verifyPassword(password: string, hash: string) {
-  return bcrypt.compare(password, hash);
-}
-
-export async function createSession(payload: SessionPayload) {
-  const token = await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${TTL_DAYS}d`)
-    .sign(secret());
-
-  const jar = await cookies();
-  jar.set(COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: TTL_DAYS * 24 * 60 * 60,
-  });
-}
-
-export async function destroySession() {
-  const jar = await cookies();
-  jar.delete(COOKIE);
-}
-
-export async function getSession(): Promise<SessionPayload | null> {
-  const jar = await cookies();
-  const token = jar.get(COOKIE)?.value;
-  if (!token) return null;
+export async function getAuthUser() {
   try {
-    const { payload } = await jwtVerify(token, secret());
-    return payload as unknown as SessionPayload;
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user;
   } catch {
     return null;
   }
+}
+
+export async function getSession(): Promise<SessionPayload | null> {
+  const ctx = await getCurrentContext();
+  return ctx?.session ?? null;
 }
 
 export async function requireSession() {
@@ -69,28 +35,49 @@ export async function requireSession() {
 }
 
 export async function getCurrentContext() {
-  const session = await getSession();
-  if (!session) return null;
+  const authUser = await getAuthUser();
+  if (!authUser?.email) return null;
 
-  const [user, membership, organization] = await Promise.all([
-    db.user.findUnique({ where: { id: session.userId } }),
-    db.membership.findUnique({
-      where: {
-        organizationId_userId: {
-          organizationId: session.orgId,
-          userId: session.userId,
-        },
-      },
-    }),
-    db.organization.findUnique({
-      where: { id: session.orgId },
-      include: { plan: true },
-    }),
-  ]);
+  let user = await db.user.findFirst({
+    where: {
+      OR: [{ authUserId: authUser.id }, { id: authUser.id }, { email: authUser.email.toLowerCase() }],
+    },
+  });
 
-  if (!user || !membership || !organization) return null;
+  // Link existing profile row to Supabase Auth on first login
+  if (user && !user.authUserId) {
+    user = await db.user.update({
+      where: { id: user.id },
+      data: { authUserId: authUser.id },
+    });
+  }
 
-  return { session, user, membership, organization };
+  if (!user) return null;
+
+  const membership = await db.membership.findFirst({
+    where: { userId: user.id },
+    include: { organization: { include: { plan: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (!membership) return null;
+
+  const session: SessionPayload = {
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    orgId: membership.organizationId,
+    orgSlug: membership.organization.slug,
+    role: membership.role,
+    authUserId: authUser.id,
+  };
+
+  return {
+    session,
+    user,
+    membership,
+    organization: membership.organization,
+  };
 }
 
 export function canEdit(role: string) {

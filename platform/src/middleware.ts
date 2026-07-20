@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { jwtVerify } from "jose";
+import { updateSession } from "@/lib/supabase/middleware";
 
 const PUBLIC = [
   "/",
@@ -22,10 +22,25 @@ function isPublic(pathname: string) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (isPublic(pathname)) return NextResponse.next();
+  const { response, user, configured } = await updateSession(req);
 
-  const token = req.cookies.get("ipx_session")?.value;
-  if (!token) {
+  if (isPublic(pathname)) return response;
+
+  if (!configured) {
+    // Allow build/dev without Supabase env, but block authenticated app routes with a clear redirect.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Supabase Auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY." },
+        { status: 503 }
+      );
+    }
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("error", "supabase_not_configured");
+    return NextResponse.redirect(url);
+  }
+
+  if (!user) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -35,20 +50,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  try {
-    const secret = new TextEncoder().encode(
-      process.env.AUTH_SECRET || "dev-secret-change-me-please-32chars"
-    );
-    await jwtVerify(token, secret);
-    return NextResponse.next();
-  } catch {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
+  return response;
 }
 
 export const config = {

@@ -32,9 +32,9 @@ In Supabase **SQL Editor**, copy/paste/run in order:
 1. [`supabase/schema.sql`](supabase/schema.sql) — create tables  
 2. [`supabase/sample_data_17_projects.sql`](supabase/sample_data_17_projects.sql) — seed **17 projects** + demo users  
 
-Then wire `DATABASE_URL` per [`supabase/README.md`](supabase/README.md).
+Then set `DATABASE_URL` **and** Supabase Auth keys (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) per [`supabase/README.md`](supabase/README.md).
 
-- Demo: `demo@iprojectx.com` / `demo1234`  
+- Demo: `demo@iprojectx.com` / `demo1234` (Supabase Auth)  
 - Use **Data & Exports** for Excel + PPT/PDF  
 - Use **Platform Admin** for landing page / global feature flags  
 
