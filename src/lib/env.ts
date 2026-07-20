@@ -63,7 +63,6 @@ const REQUIRED = [
 ] as const;
 
 const OPTIONAL = [
-  "DIRECT_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
   "NEXT_PUBLIC_APP_URL",
   "STRIPE_SECRET_KEY",
@@ -116,6 +115,11 @@ export function checkEnv(): EnvCheck {
         "Run `npm run env:pull` after `npx vercel link`, or copy `.env.example` to `.env.local` and fill values."
       );
     }
+  }
+  if (env.databaseUrl && env.databaseUrl.startsWith("file:")) {
+    hints.push(
+      "DATABASE_URL looks like SQLite (file:...). This app requires a Supabase PostgreSQL URL (postgresql://...)."
+    );
   }
   if (!env.supabaseServiceRoleKey) {
     hints.push("SUPABASE_SERVICE_ROLE_KEY is optional but required for member invites via Auth Admin.");
