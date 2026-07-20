@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { destroySession } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
-  await destroySession();
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore missing env during teardown
+  }
   return NextResponse.json({ ok: true });
 }

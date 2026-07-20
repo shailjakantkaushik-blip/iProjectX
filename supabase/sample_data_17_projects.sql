@@ -12,7 +12,7 @@ begin;
 
 -- Stable IDs for idempotent re-runs
 -- org:     org_acme_demo
--- users:   user_demo_owner, user_demo_exec
+-- users:   11111111-...1111 (owner), 22222222-...2222 (exec)
 -- programs: prog_01 .. prog_04
 -- projects: prj_01 .. prj_17
 
@@ -35,7 +35,27 @@ delete from "Program" where "organizationId" = 'org_acme_demo';
 delete from "Invitation" where "organizationId" = 'org_acme_demo';
 delete from "Membership" where "organizationId" = 'org_acme_demo';
 delete from "Organization" where id = 'org_acme_demo';
-delete from "User" where id in ('user_demo_owner', 'user_demo_exec');
+delete from "User"
+where id in (
+  'user_demo_owner',
+  'user_demo_exec',
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222'
+)
+or email in ('demo@iprojectx.com', 'exec@iprojectx.com');
+
+delete from auth.identities
+where user_id in (
+  '11111111-1111-4111-8111-111111111111'::uuid,
+  '22222222-2222-4222-8222-222222222222'::uuid
+);
+
+delete from auth.users
+where id in (
+  '11111111-1111-4111-8111-111111111111'::uuid,
+  '22222222-2222-4222-8222-222222222222'::uuid
+)
+or email in ('demo@iprojectx.com', 'exec@iprojectx.com');
 
 -- Plans (schema already seeds these; keep upsert-safe)
 insert into "Plan" (id, slug, name, description, "monthlyPrice", "annualPrice", "seatLimit", "projectLimit", features, "isEnterprise", "sortOrder")
@@ -89,13 +109,61 @@ on conflict (id) do update set
   "enablePdfExport" = true,
   "updatedAt" = now();
 
--- Users (password: demo1234)
-insert into "User" (id, email, name, "passwordHash", "isPlatformAdmin")
+-- Supabase Auth users (password: demo1234)
+-- Uses pgcrypto crypt() so Auth can verify the password.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change
+) values
+(
+  '00000000-0000-0000-0000-000000000000',
+  '11111111-1111-4111-8111-111111111111',
+  'authenticated', 'authenticated', 'demo@iprojectx.com',
+  crypt('demo1234', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"name":"Alex Morgan"}',
+  now(), now(), '', '', '', ''
+),
+(
+  '00000000-0000-0000-0000-000000000000',
+  '22222222-2222-4222-8222-222222222222',
+  'authenticated', 'authenticated', 'exec@iprojectx.com',
+  crypt('demo1234', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"name":"Jordan Lee"}',
+  now(), now(), '', '', '', ''
+);
+
+insert into auth.identities (
+  id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
+) values
+(
+  gen_random_uuid(),
+  '11111111-1111-4111-8111-111111111111',
+  jsonb_build_object('sub', '11111111-1111-4111-8111-111111111111', 'email', 'demo@iprojectx.com'),
+  'email',
+  '11111111-1111-4111-8111-111111111111',
+  now(), now(), now()
+),
+(
+  gen_random_uuid(),
+  '22222222-2222-4222-8222-222222222222',
+  jsonb_build_object('sub', '22222222-2222-4222-8222-222222222222', 'email', 'exec@iprojectx.com'),
+  'email',
+  '22222222-2222-4222-8222-222222222222',
+  now(), now(), now()
+);
+
+-- App profile rows (same ids as auth.users)
+insert into "User" (id, email, name, "authUserId", "passwordHash", "isPlatformAdmin")
 values
-  ('user_demo_owner', 'demo@iprojectx.com', 'Alex Morgan',
-   '$2b$12$RqakM9T4vpvn0Ca/BonEseUIsaYP9P7aHtJYLhLcKue4OZVJK9qIa', true),
-  ('user_demo_exec', 'exec@iprojectx.com', 'Jordan Lee',
-   '$2b$12$RqakM9T4vpvn0Ca/BonEseUIsaYP9P7aHtJYLhLcKue4OZVJK9qIa', false);
+  ('11111111-1111-4111-8111-111111111111', 'demo@iprojectx.com', 'Alex Morgan',
+   '11111111-1111-4111-8111-111111111111', null, true),
+  ('22222222-2222-4222-8222-222222222222', 'exec@iprojectx.com', 'Jordan Lee',
+   '22222222-2222-4222-8222-222222222222', null, false);
 
 -- Organization
 insert into "Organization" (
@@ -112,8 +180,8 @@ insert into "Organization" (
 
 insert into "Membership" (id, "organizationId", "userId", role)
 values
-  ('mem_owner', 'org_acme_demo', 'user_demo_owner', 'owner'),
-  ('mem_exec', 'org_acme_demo', 'user_demo_exec', 'executive');
+  ('mem_owner', 'org_acme_demo', '11111111-1111-4111-8111-111111111111', 'owner'),
+  ('mem_exec', 'org_acme_demo', '22222222-2222-4222-8222-222222222222', 'executive');
 
 -- Programs
 insert into "Program" (id, "organizationId", name, owner, sponsor, budget, forecast, "startFy", "endFy", status)

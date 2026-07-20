@@ -3,6 +3,8 @@ import { getCurrentContext } from "@/lib/auth";
 import { resolveBrand } from "@/lib/branding";
 import { AppShell } from "@/components/app-shell";
 
+export const dynamic = "force-dynamic";
+
 export default async function AuthenticatedLayout({
   children,
 }: {

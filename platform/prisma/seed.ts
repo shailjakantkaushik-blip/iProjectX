@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 import { PLAN_CATALOG } from "../src/lib/plans";
 import { scorePipeline } from "../src/lib/utils";
 import { DEFAULT_FEATURE_CARDS } from "../src/lib/site-config";
@@ -51,26 +50,36 @@ async function main() {
   }
 
   const pro = await db.plan.findUniqueOrThrow({ where: { slug: "professional" } });
-  const passwordHash = await bcrypt.hash("demo1234", 12);
+  // Local SQLite seed profiles. For real login use Supabase Auth
+  // (run supabase/sample_data_17_projects.sql which creates auth.users).
+  const ownerId = "11111111-1111-4111-8111-111111111111";
+  const execId = "22222222-2222-4222-8222-222222222222";
 
-  const user = await db.user.upsert({
-    where: { email: "demo@iprojectx.com" },
-    update: { passwordHash, name: "Alex Morgan", isPlatformAdmin: true },
-    create: {
+  await db.membership.deleteMany({
+    where: { user: { email: { in: ["demo@iprojectx.com", "exec@iprojectx.com"] } } },
+  });
+  await db.user.deleteMany({
+    where: { email: { in: ["demo@iprojectx.com", "exec@iprojectx.com"] } },
+  });
+
+  const user = await db.user.create({
+    data: {
+      id: ownerId,
+      authUserId: ownerId,
       email: "demo@iprojectx.com",
       name: "Alex Morgan",
-      passwordHash,
+      passwordHash: null,
       isPlatformAdmin: true,
     },
   });
 
-  const exec = await db.user.upsert({
-    where: { email: "exec@iprojectx.com" },
-    update: { passwordHash, name: "Jordan Lee", isPlatformAdmin: false },
-    create: {
+  const exec = await db.user.create({
+    data: {
+      id: execId,
+      authUserId: execId,
       email: "exec@iprojectx.com",
       name: "Jordan Lee",
-      passwordHash,
+      passwordHash: null,
       isPlatformAdmin: false,
     },
   });
@@ -315,9 +324,9 @@ async function main() {
     ],
   });
 
-  console.log("Seed complete.");
-  console.log("Demo login: demo@iprojectx.com / demo1234");
-  console.log("Exec login:  exec@iprojectx.com / demo1234");
+  console.log("Seed complete (app data).");
+  console.log("For login, use Supabase Auth — run supabase/sample_data_17_projects.sql");
+  console.log("Demo: demo@iprojectx.com / demo1234");
 }
 
 main()

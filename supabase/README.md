@@ -1,36 +1,37 @@
 # Supabase setup for iProjectX
 
-Run these in order in **Supabase → SQL Editor** (copy / paste / Run):
+## Run SQL (copy / paste / Run in SQL Editor)
 
 | Step | File | Purpose |
 |------|------|---------|
-| 1 | [`schema.sql`](./schema.sql) | Create all tables, indexes, triggers, plans |
-| 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | Seed demo org + **17 projects** + briefs, risks, finance, etc. |
+| 1 | [`schema.sql`](./schema.sql) | App tables |
+| 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | 17 projects + **Supabase Auth** demo users |
 
-## Demo logins (after sample data)
-
-| Email | Password | Access |
-|-------|----------|--------|
-| `demo@iprojectx.com` | `demo1234` | Org owner + **Platform Admin** |
-| `exec@iprojectx.com` | `demo1234` | Executive (read-only) |
-
-Sample tenant: **Acme Digital** (`acme-digital`) with 17 projects (`PRJ-001` … `PRJ-017`).
-
-## Connection strings
-
-Supabase → **Project Settings → Database**
+## App environment (`platform/.env`)
 
 ```env
 DATABASE_URL="postgresql://postgres.YOUR_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true"
 DIRECT_URL="postgresql://postgres.YOUR_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres"
-AUTH_SECRET="replace-with-long-random-secret"
+
+NEXT_PUBLIC_SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+
 NEXT_PUBLIC_APP_NAME="iProjectX"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-## Point the app at Supabase
+Keys: **Supabase → Project Settings → API**  
+DB URIs: **Project Settings → Database**
 
-In `platform/prisma/schema.prisma`:
+## Auth settings (recommended for demo)
+
+**Authentication → Providers → Email**
+
+- Enable Email provider  
+- For local/demo: turn **Confirm email** **OFF** so signup/login works immediately  
+
+## Prisma
 
 ```prisma
 datasource db {
@@ -46,8 +47,11 @@ npx prisma generate
 npm run dev
 ```
 
-If you already loaded `sample_data_17_projects.sql`, you do **not** need `npm run db:seed`.
+## Demo logins
 
-## Re-run sample data
+| Email | Password | Access |
+|-------|----------|--------|
+| `demo@iprojectx.com` | `demo1234` | Owner + Platform Admin |
+| `exec@iprojectx.com` | `demo1234` | Executive |
 
-`sample_data_17_projects.sql` deletes and recreates the `org_acme_demo` tenant, so it is safe to re-run.
+Auth is handled by **Supabase Auth**. App tables store org membership / RBAC only (no `AUTH_SECRET` cookie sessions).

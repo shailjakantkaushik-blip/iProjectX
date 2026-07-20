@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { createSession, hashPassword } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
   name: z.string().min(2),
@@ -15,11 +15,30 @@ const schema = z.object({
 export async function POST(req: Request) {
   try {
     const body = schema.parse(await req.json());
-    const existing = await db.user.findUnique({ where: { email: body.email.toLowerCase() } });
+    const email = body.email.toLowerCase();
+
+    const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "Email already registered" }, { status: 400 });
     }
 
+    const supabase = await createClient();
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password: body.password,
+      options: {
+        data: { name: body.name },
+      },
+    });
+
+    if (authError || !authData.user) {
+      return NextResponse.json(
+        { error: authError?.message || "Could not create Supabase Auth user" },
+        { status: 400 }
+      );
+    }
+
+    // If email confirmation is required, session may be null — still create workspace profile.
     const plan = await db.plan.findUnique({ where: { slug: body.planSlug } });
     const baseSlug = slugify(body.organizationName) || "workspace";
     let slug = baseSlug;
@@ -28,12 +47,13 @@ export async function POST(req: Request) {
       slug = `${baseSlug}-${i++}`;
     }
 
-    const passwordHash = await hashPassword(body.password);
     const user = await db.user.create({
       data: {
+        id: authData.user.id,
+        authUserId: authData.user.id,
         name: body.name,
-        email: body.email.toLowerCase(),
-        passwordHash,
+        email,
+        passwordHash: null,
       },
     });
 
@@ -42,7 +62,7 @@ export async function POST(req: Request) {
         name: body.organizationName,
         slug,
         planId: plan?.id,
-        billingEmail: body.email.toLowerCase(),
+        billingEmail: email,
         seatCount: 1,
         subscriptionStatus: "trialing",
         trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
@@ -59,14 +79,14 @@ export async function POST(req: Request) {
       },
     });
 
-    await createSession({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      orgId: org.id,
-      orgSlug: org.slug,
-      role: "owner",
-    });
+    if (!authData.session) {
+      return NextResponse.json({
+        ok: true,
+        orgSlug: org.slug,
+        needsEmailConfirmation: true,
+        message: "Check your email to confirm your account, then sign in.",
+      });
+    }
 
     return NextResponse.json({ ok: true, orgSlug: org.slug });
   } catch (e) {

@@ -50,7 +50,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - Next.js App Router + TypeScript
 - Prisma + SQLite (swap `DATABASE_URL` to Postgres for production)
-- Cookie JWT auth (`jose` + `bcryptjs`)
+- **Supabase Auth** for login/signup (org RBAC in app DB)
 - Recharts + CSS motion for interactive UI
 - Tailwind CSS v4
 
