@@ -27,10 +27,16 @@ npm run dev
 
 ### Supabase (recommended production DB)
 
-1. Copy/paste/run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor  
-2. Follow [`supabase/README.md`](supabase/README.md) to wire `DATABASE_URL`  
-3. Use **Data & Exports** for Excel template download/upload and PPT/PDF packs  
-4. Use **Platform Admin** to configure landing page + global feature flags  
+In Supabase **SQL Editor**, copy/paste/run in order:
+
+1. [`supabase/schema.sql`](supabase/schema.sql) — create tables  
+2. [`supabase/sample_data_17_projects.sql`](supabase/sample_data_17_projects.sql) — seed **17 projects** + demo users  
+
+Then wire `DATABASE_URL` per [`supabase/README.md`](supabase/README.md).
+
+- Demo: `demo@iprojectx.com` / `demo1234`  
+- Use **Data & Exports** for Excel + PPT/PDF  
+- Use **Platform Admin** for landing page / global feature flags  
 
 See [`platform/README.md`](platform/README.md) for full SaaS documentation.
 

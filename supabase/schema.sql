@@ -1,13 +1,17 @@
 -- ============================================================================
 -- iProjectX — Supabase schema (copy, paste, run in SQL Editor)
 -- ============================================================================
+-- Run order:
+--   1) schema.sql                         ← this file (tables)
+--   2) sample_data_17_projects.sql        ← 17-project demo portfolio
+--
 -- After running:
 -- 1. Project Settings → Database → copy connection string (URI)
 -- 2. Set in platform/.env:
 --      DATABASE_URL="postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
 --      DIRECT_URL="postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres"
 -- 3. In prisma/schema.prisma set provider = "postgresql"
--- 4. cd platform && npx prisma db pull && npx prisma generate && npm run db:seed
+-- 4. npx prisma generate && npm run dev
 -- ============================================================================
 
 create extension if not exists "pgcrypto";
