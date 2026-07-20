@@ -9,13 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { BarChart3 } from "lucide-react";
+import { getAppName } from "@/lib/env";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — PMO Enterprise" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: `Sign in — ${getAppName()}` }, { name: "robots", content: "noindex" }] }),
   component: AuthPage,
 });
 
 function AuthPage() {
+  const appName = getAppName();
   const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -61,7 +63,7 @@ function AuthPage() {
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2">
           <div className="rounded-lg bg-primary p-2 text-primary-foreground"><BarChart3 className="h-5 w-5" /></div>
-          <span className="text-lg font-semibold">PMO Enterprise</span>
+          <span className="text-lg font-semibold">{appName}</span>
         </Link>
         <Card>
           <CardHeader>

@@ -10,6 +10,7 @@ import {
 import { useAuth, isAdmin } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getAppName } from "@/lib/env";
 
 type NavItem = { to: string; label: string; icon: any; exact?: boolean; adminOnly?: boolean };
 
@@ -90,7 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold text-sidebar-foreground">
-              {organization?.name ?? "PMO Enterprise"}
+              {organization?.name ?? getAppName()}
             </div>
             <div className="truncate text-[11px] text-muted-foreground">
               {organization?.plan ?? "free"} plan

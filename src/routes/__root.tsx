@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { getAppName } from "@/lib/env";
 
 function NotFoundComponent() {
   return (
@@ -57,19 +58,22 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PMO Enterprise — Portfolio & Project Management" },
-      { name: "description", content: "Multi-tenant portfolio and project management platform for enterprise PMOs." },
-      { property: "og:title", content: "PMO Enterprise" },
-      { property: "og:description", content: "Portfolio and project management for enterprise PMOs." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-    links: [{ rel: "stylesheet", href: appCss }],
-  }),
+  head: () => {
+    const appName = getAppName();
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title: `${appName} — Portfolio & Project Management` },
+        { name: "description", content: "Multi-tenant portfolio and project management platform for enterprise PMOs." },
+        { property: "og:title", content: appName },
+        { property: "og:description", content: "Portfolio and project management for enterprise PMOs." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+      links: [{ rel: "stylesheet", href: appCss }],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,

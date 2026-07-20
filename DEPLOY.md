@@ -11,17 +11,23 @@ This repo is a **TanStack Start** (Vite + Nitro) PMO app with the legacy Streaml
 5. Root directory: empty (repo root)
 6. Set env vars from [`.env.example`](./.env.example) for Production + Preview.
 
-`vite.config.ts` pins Nitro `preset: "vercel"` for this deployment.
+`vite.config.ts` pins Nitro `preset: "vercel"` and exposes `NEXT_PUBLIC_*` to the client bundle.
 
-## Supabase
+## Environment variables (match Vercel dashboard)
 
-Required env (aliases supported):
-
-| Purpose | Env names (any one works) |
-|--------|---------------------------|
-| URL | `VITE_SUPABASE_URL`, `SUPABASE_URL` |
-| Browser key | `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_ANON_KEY` |
-| Admin key | `SUPABASE_SERVICE_ROLE_KEY` |
+| Env | Purpose |
+|-----|---------|
+| `DATABASE_URL` | Postgres pooler connection string |
+| `DIRECT_URL` | Postgres direct connection (migrations) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (browser + server) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon / publishable key (browser) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role (server admin) |
+| `SUPABASE_SECRET_KEY` | Supabase secret key alias (server) |
+| `STRIPE_SECRET_KEY` | Stripe checkout + webhooks |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signature verify |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile (optional) |
+| `NEXT_PUBLIC_APP_NAME` | Product name in UI / titles |
+| `NEXT_PUBLIC_APP_URL` | Success/cancel redirect base |
 
 Apply SQL: `supabase/migrations/*.sql` in Supabase SQL Editor, then also:
 
@@ -31,20 +37,13 @@ Auth → URL config: add `https://i-project-x.vercel.app/**` to redirect URLs.
 
 ## Stripe
 
-| Env | Purpose |
-|-----|---------|
-| `STRIPE_SECRET_KEY` | Server checkout + webhooks |
-| `STRIPE_WEBHOOK_SECRET` | Webhook signature verify |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Optional client |
-| `STRIPE_PRICE_TEAM` | Stripe Price id for Team |
-| `STRIPE_PRICE_BUSINESS` | Stripe Price id for Business |
-| `APP_URL` | Success/cancel redirect base |
-
 Webhook endpoint:
 
 `https://i-project-x.vercel.app/api/stripe/webhook`
 
 Events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
+
+Optional price ids: `STRIPE_PRICE_TEAM`, `STRIPE_PRICE_BUSINESS`.
 
 ## Cloudflare R2
 
@@ -56,6 +55,6 @@ Helpers: `src/lib/cloudflare-r2.ts`
 
 ## Health check
 
-`GET /api/health` → `{ ok, services: { supabase, stripe, cloudflareR2, ... } }`
+`GET /api/health` → `{ ok, services: { supabase, stripe, database, turnstile, ... } }`
 
 Billing page `/app/billing` also shows connection badges.

@@ -1,27 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Shield, Users, Layers, Rocket, FileSpreadsheet } from "lucide-react";
+import { getAppName } from "@/lib/env";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "PMO Enterprise — Multi-tenant Portfolio Management" },
-      { name: "description", content: "Run your entire portfolio: projects, risks, budgets, benefits, dashboards. Multi-org, role-based, Excel-friendly." },
-      { property: "og:title", content: "PMO Enterprise" },
-      { property: "og:description", content: "Multi-tenant portfolio and project management for enterprise PMOs." },
-    ],
-  }),
+  head: () => {
+    const appName = getAppName();
+    return {
+      meta: [
+        { title: `${appName} — Multi-tenant Portfolio Management` },
+        { name: "description", content: "Run your entire portfolio: projects, risks, budgets, benefits, dashboards. Multi-org, role-based, Excel-friendly." },
+        { property: "og:title", content: appName },
+        { property: "og:description", content: "Multi-tenant portfolio and project management for enterprise PMOs." },
+      ],
+    };
+  },
   component: Landing,
 });
 
 function Landing() {
+  const appName = getAppName();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-primary p-2 text-primary-foreground"><BarChart3 className="h-5 w-5" /></div>
-            <span className="font-semibold">PMO Enterprise</span>
+            <span className="font-semibold">{appName}</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>

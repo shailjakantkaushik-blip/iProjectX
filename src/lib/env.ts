@@ -1,6 +1,14 @@
 /**
- * Unified env resolution for Vercel + Vite + common aliases.
- * Prefer Vercel dashboard env vars; VITE_* are baked into the client bundle at build time.
+ * Unified env resolution for Vercel dashboard keys.
+ *
+ * Primary names match Vercel → Project → Environment Variables:
+ *   DIRECT_URL, DATABASE_URL, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
+ *   SUPABASE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY,
+ *   NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_URL,
+ *   TURNSTILE_SECRET_KEY, NEXT_PUBLIC_APP_NAME, NEXT_PUBLIC_APP_URL
+ *
+ * Legacy VITE_* / short aliases remain as fallbacks for local/Lovable.
+ * NEXT_PUBLIC_* are exposed to the client via vite.config envPrefix.
  */
 
 function first(...values: Array<string | undefined | null>): string | undefined {
@@ -12,7 +20,7 @@ function first(...values: Array<string | undefined | null>): string | undefined 
 
 function metaEnv(key: string): string | undefined {
   try {
-    // Vite injects import.meta.env at build time
+    // Vite injects import.meta.env at build time (VITE_* and NEXT_PUBLIC_*)
     const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env;
     return env?.[key];
   } catch {
@@ -20,30 +28,44 @@ function metaEnv(key: string): string | undefined {
   }
 }
 
+/** Postgres pooler URL (Prisma / server DB) */
+export function getDatabaseUrl(): string | undefined {
+  return first(process.env.DATABASE_URL);
+}
+
+/** Postgres direct (non-pooler) URL for migrations */
+export function getDirectUrl(): string | undefined {
+  return first(process.env.DIRECT_URL, process.env.DATABASE_URL);
+}
+
 /** Public Supabase URL — safe for browser */
 export function getSupabaseUrl(): string | undefined {
   return first(
+    metaEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
     metaEnv("VITE_SUPABASE_URL"),
     process.env.VITE_SUPABASE_URL,
     process.env.SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
   );
 }
 
-/** Publishable / anon key — safe for browser */
+/** Anon / publishable key — safe for browser */
 export function getSupabasePublishableKey(): string | undefined {
   return first(
+    metaEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    metaEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    metaEnv("VITE_SUPABASE_ANON_KEY"),
+    process.env.VITE_SUPABASE_ANON_KEY,
+    process.env.SUPABASE_ANON_KEY,
     metaEnv("VITE_SUPABASE_PUBLISHABLE_KEY"),
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     process.env.SUPABASE_PUBLISHABLE_KEY,
-    process.env.VITE_SUPABASE_ANON_KEY,
-    process.env.SUPABASE_ANON_KEY,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   );
 }
 
-/** Service role — server only, never expose to client */
+/** Service role / secret — server only, never expose to client */
 export function getSupabaseServiceRoleKey(): string | undefined {
   return first(
     process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -62,20 +84,39 @@ export function getStripeWebhookSecret(): string | undefined {
 
 export function getStripePublishableKey(): string | undefined {
   return first(
+    metaEnv("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     metaEnv("VITE_STRIPE_PUBLISHABLE_KEY"),
     process.env.VITE_STRIPE_PUBLISHABLE_KEY,
     process.env.STRIPE_PUBLISHABLE_KEY,
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  );
+}
+
+/** Cloudflare Turnstile secret — server only */
+export function getTurnstileSecretKey(): string | undefined {
+  return first(process.env.TURNSTILE_SECRET_KEY);
+}
+
+export function getAppName(): string {
+  return (
+    first(
+      metaEnv("NEXT_PUBLIC_APP_NAME"),
+      process.env.NEXT_PUBLIC_APP_NAME,
+      metaEnv("VITE_APP_NAME"),
+      process.env.VITE_APP_NAME,
+      process.env.APP_NAME,
+    ) || "iProjectX"
   );
 }
 
 export function getAppUrl(): string {
   return (
     first(
-      process.env.APP_URL,
+      metaEnv("NEXT_PUBLIC_APP_URL"),
       process.env.NEXT_PUBLIC_APP_URL,
-      process.env.VITE_APP_URL,
+      process.env.APP_URL,
       metaEnv("VITE_APP_URL"),
+      process.env.VITE_APP_URL,
       process.env.VERCEL_PROJECT_PRODUCTION_URL
         ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
         : undefined,
@@ -121,9 +162,13 @@ export function getServiceStatus() {
   return {
     supabase: Boolean(getSupabaseUrl() && getSupabasePublishableKey()),
     supabaseAdmin: Boolean(getSupabaseUrl() && getSupabaseServiceRoleKey()),
+    database: Boolean(getDatabaseUrl()),
+    directUrl: Boolean(getDirectUrl()),
     stripe: Boolean(getStripeSecretKey()),
     stripePublishable: Boolean(getStripePublishableKey()),
+    turnstile: Boolean(getTurnstileSecretKey()),
     cloudflareR2: Boolean(getCloudflareR2Config()),
+    appName: getAppName(),
     appUrl: getAppUrl(),
   };
 }
