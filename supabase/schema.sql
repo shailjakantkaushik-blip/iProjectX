@@ -491,3 +491,136 @@ alter table "ProjectBrief" enable row level security;
 
 comment on table "SiteConfig" is 'Platform-owner configurable landing page and global feature flags';
 comment on table "ProjectBrief" is 'Business case content for project infographic and exports';
+
+-- ---------- Streamlit parity extensions ----------
+-- (Also available standalone as streamlit_parity_full.sql for existing DBs)
+
+create table if not exists "Benefit" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text,
+  "projectName" text,
+  title text not null,
+  "benefitType" text not null default 'Financial',
+  "targetValue" double precision not null default 0,
+  "realisedValue" double precision not null default 0,
+  owner text,
+  status text not null default 'Tracked',
+  fy text,
+  notes text,
+  "createdAt" timestamptz not null default now(),
+  "updatedAt" timestamptz not null default now()
+);
+
+create table if not exists "CostBenefitYear" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text,
+  "projectName" text,
+  year integer not null,
+  capex double precision not null default 0,
+  opex double precision not null default 0,
+  "benefitRecurring" double precision not null default 0,
+  "benefitOneOff" double precision not null default 0,
+  notes text
+);
+
+create table if not exists "FyAllocation" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text not null,
+  "projectName" text,
+  fy text not null,
+  "budgetPct" double precision not null default 0,
+  "forecastPct" double precision not null default 0,
+  "budgetAmount" double precision not null default 0,
+  "forecastAmount" double precision not null default 0,
+  notes text,
+  "updatedAt" timestamptz not null default now()
+);
+
+create table if not exists "PortfolioMovement" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text not null,
+  "projectName" text,
+  "fromCategory" text not null,
+  "toCategory" text not null,
+  reason text,
+  "changedBy" text,
+  "effectiveDate" timestamptz not null default now(),
+  "createdAt" timestamptz not null default now()
+);
+
+create table if not exists "PhaseFinancial" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text not null,
+  "projectName" text,
+  stage text not null,
+  "plannedStart" timestamptz,
+  "plannedEnd" timestamptz,
+  "actualStart" timestamptz,
+  "actualEnd" timestamptz,
+  budget double precision not null default 0,
+  forecast double precision not null default 0,
+  actual double precision not null default 0,
+  status text not null default 'Planned',
+  notes text
+);
+
+create table if not exists "ProjectLink" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text not null,
+  label text not null,
+  url text not null,
+  "linkType" text not null default 'Document'
+);
+
+create table if not exists "PrioritisationScore" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text not null,
+  "projectName" text,
+  "strategicAlignment" integer not null default 3,
+  "benefitValue" integer not null default 3,
+  "riskReduction" integer not null default 2,
+  compliance integer not null default 2,
+  complexity integer not null default 3,
+  score double precision not null default 0,
+  notes text,
+  "updatedAt" timestamptz not null default now()
+);
+
+create table if not exists "OrgConfigItem" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  category text not null,
+  key text not null,
+  value text not null,
+  "sortOrder" integer not null default 0
+);
+
+create table if not exists "RaidItem" (
+  id text primary key default gen_random_uuid()::text,
+  "organizationId" text not null references "Organization"(id) on delete cascade,
+  "projectId" text,
+  "projectCode" text,
+  "raidType" text not null,
+  title text not null,
+  description text,
+  owner text,
+  status text not null default 'Open',
+  impact text not null default 'Medium',
+  "dueDate" timestamptz,
+  "createdAt" timestamptz not null default now(),
+  "updatedAt" timestamptz not null default now()
+);
