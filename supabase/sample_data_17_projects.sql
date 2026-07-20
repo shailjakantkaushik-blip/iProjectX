@@ -238,13 +238,14 @@ where p."organizationId" = 'org_acme_demo';
 
 -- Milestones
 insert into "Milestone" (id, "projectId", name, "plannedDate", status, owner)
-select p.id || '_ms1', p.id, 'Charter approved', '2025-08-15', 'Complete', p.pm from "Project" p where p."organizationId" = 'org_acme_demo'
+select p.id || '_ms1', p.id, 'Charter approved', '2025-08-15'::timestamptz, 'Complete', p.pm
+from "Project" p where p."organizationId" = 'org_acme_demo'
 union all
-select p.id || '_ms2', p.id, 'Design baseline', '2025-11-01',
+select p.id || '_ms2', p.id, 'Design baseline', '2025-11-01'::timestamptz,
   case when p.progress >= 40 then 'Complete' else 'Planned' end, p."deliveryLead"
 from "Project" p where p."organizationId" = 'org_acme_demo'
 union all
-select p.id || '_ms3', p.id, 'Go-live readiness', '2026-09-30', 'Planned', p.pm
+select p.id || '_ms3', p.id, 'Go-live readiness', '2026-09-30'::timestamptz, 'Planned', p.pm
 from "Project" p where p."organizationId" = 'org_acme_demo';
 
 -- Monthly financials (Jul–Dec 2025)
@@ -292,19 +293,19 @@ insert into "PipelineItem" (
 -- Decisions / Actions
 insert into "Decision" (id, "organizationId", "projectId", title, description, owner, "decidedOn", outcome, status)
 values
-('dec_01','org_acme_demo','prj_01','Approve full funding for Wave 2','Wave 2 ERP modules funding decision','CFO','2025-10-12','Funded $480k','Approved'),
+('dec_01','org_acme_demo','prj_01','Approve full funding for Wave 2','Wave 2 ERP modules funding decision','CFO','2025-10-12'::timestamptz,'Funded $480k','Approved'),
 ('dec_02','org_acme_demo','prj_03','Select lakehouse vendor','Final shortlist Snowflake vs Databricks','CTO',null,null,'Pending'),
-('dec_03','org_acme_demo','prj_11','CRM platform downselect','Salesforce vs Dynamics decision','CCO','2025-12-01','Selected Salesforce','Approved'),
-('dec_04','org_acme_demo','prj_10','MFA enforcement date','Enterprise MFA mandate timing','CISO','2026-01-15','Enforce from Apr 2026','Approved');
+('dec_03','org_acme_demo','prj_11','CRM platform downselect','Salesforce vs Dynamics decision','CCO','2025-12-01'::timestamptz,'Selected Salesforce','Approved'),
+('dec_04','org_acme_demo','prj_10','MFA enforcement date','Enterprise MFA mandate timing','CISO','2026-01-15'::timestamptz,'Enforce from Apr 2026','Approved');
 
 insert into "Action" (id, "organizationId", "projectId", title, owner, "dueDate", priority, status)
 values
-('act_01','org_acme_demo','prj_03','Complete source system profiling','Riley Chen','2026-04-01','High','Open'),
-('act_02','org_acme_demo','prj_01','Close security questionnaire','Sam Rivera','2026-03-20','Critical','In Progress'),
-('act_03','org_acme_demo','prj_02','Publish release notes draft','Jamie Cole','2026-03-25','Medium','Open'),
-('act_04','org_acme_demo','prj_11','Confirm migration wave plan','Avery Kim','2026-04-10','High','Open'),
-('act_05','org_acme_demo','prj_13','Validate peak freeze calendar','Harper Diaz','2026-03-28','High','Open'),
-('act_06','org_acme_demo','prj_15','Publish API standards pack','Riley Chen','2026-04-05','Medium','In Progress');
+('act_01','org_acme_demo','prj_03','Complete source system profiling','Riley Chen','2026-04-01'::timestamptz,'High','Open'),
+('act_02','org_acme_demo','prj_01','Close security questionnaire','Sam Rivera','2026-03-20'::timestamptz,'Critical','In Progress'),
+('act_03','org_acme_demo','prj_02','Publish release notes draft','Jamie Cole','2026-03-25'::timestamptz,'Medium','Open'),
+('act_04','org_acme_demo','prj_11','Confirm migration wave plan','Avery Kim','2026-04-10'::timestamptz,'High','Open'),
+('act_05','org_acme_demo','prj_13','Validate peak freeze calendar','Harper Diaz','2026-03-28'::timestamptz,'High','Open'),
+('act_06','org_acme_demo','prj_15','Publish API standards pack','Riley Chen','2026-04-05'::timestamptz,'Medium','In Progress');
 
 -- Resources
 insert into "Resource" (id, "organizationId", "projectId", name, skill, role, month, "allocationPct", "capacityPct")
@@ -322,20 +323,20 @@ values
 -- Sprints / Releases
 insert into "Sprint" (id, "organizationId", "projectId", name, "startDate", "endDate", "committedPts", "completedPts", status)
 values
-('sp_01','org_acme_demo','prj_02','Sprint 18','2026-02-01','2026-02-14',42,40,'Complete'),
-('sp_02','org_acme_demo','prj_02','Sprint 19','2026-02-15','2026-02-28',45,28,'Active'),
-('sp_03','org_acme_demo','prj_05','Sprint 7','2026-02-15','2026-02-28',30,18,'Active'),
-('sp_04','org_acme_demo','prj_07','Sprint 4','2026-02-15','2026-02-28',26,20,'Active'),
-('sp_05','org_acme_demo','prj_08','Sprint 9','2026-02-01','2026-02-14',34,33,'Complete'),
-('sp_06','org_acme_demo','prj_14','Sprint 2','2026-02-15','2026-02-28',22,10,'Active');
+('sp_01','org_acme_demo','prj_02','Sprint 18','2026-02-01'::timestamptz,'2026-02-14'::timestamptz,42,40,'Complete'),
+('sp_02','org_acme_demo','prj_02','Sprint 19','2026-02-15'::timestamptz,'2026-02-28'::timestamptz,45,28,'Active'),
+('sp_03','org_acme_demo','prj_05','Sprint 7','2026-02-15'::timestamptz,'2026-02-28'::timestamptz,30,18,'Active'),
+('sp_04','org_acme_demo','prj_07','Sprint 4','2026-02-15'::timestamptz,'2026-02-28'::timestamptz,26,20,'Active'),
+('sp_05','org_acme_demo','prj_08','Sprint 9','2026-02-01'::timestamptz,'2026-02-14'::timestamptz,34,33,'Complete'),
+('sp_06','org_acme_demo','prj_14','Sprint 2','2026-02-15'::timestamptz,'2026-02-28'::timestamptz,22,10,'Active');
 
 insert into "Release" (id, "organizationId", "projectId", version, title, "releaseType", environment, "plannedDate", status)
 values
-('rel_01','org_acme_demo','prj_02','2.4.0','Portal personalization','Minor','Production','2026-04-15','Planned'),
-('rel_02','org_acme_demo','prj_04','1.0.0','Hardening baseline','Major','Production','2026-03-30','In Progress'),
-('rel_03','org_acme_demo','prj_10','1.2.0','MFA enforcement wave','Minor','Production','2026-04-30','Planned'),
-('rel_04','org_acme_demo','prj_12','0.9.0','FinOps dashboard beta','Minor','Staging','2026-03-20','In Progress'),
-('rel_05','org_acme_demo','prj_15','1.0.0','API gateway GA','Major','Production','2026-06-01','Planned');
+('rel_01','org_acme_demo','prj_02','2.4.0','Portal personalization','Minor','Production','2026-04-15'::timestamptz,'Planned'),
+('rel_02','org_acme_demo','prj_04','1.0.0','Hardening baseline','Major','Production','2026-03-30'::timestamptz,'In Progress'),
+('rel_03','org_acme_demo','prj_10','1.2.0','MFA enforcement wave','Minor','Production','2026-04-30'::timestamptz,'Planned'),
+('rel_04','org_acme_demo','prj_12','0.9.0','FinOps dashboard beta','Minor','Staging','2026-03-20'::timestamptz,'In Progress'),
+('rel_05','org_acme_demo','prj_15','1.0.0','API gateway GA','Major','Production','2026-06-01'::timestamptz,'Planned');
 
 -- Updates
 insert into "Update" (id, "organizationId", title, body, category)
