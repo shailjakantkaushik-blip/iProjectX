@@ -4,14 +4,11 @@ Enterprise project management and delivery SaaS (Next.js + Supabase).
 
 ## Vercel
 
-**Root Directory:** `platform`
+**Root Directory:** `platform`  
+**Output Directory:** must be **empty** (wrong output dir causes `404: NOT_FOUND`)  
+**Framework:** Next.js
 
-1. Vercel → Project → Settings → General → **Root Directory** → set to `platform`
-2. Framework Preset: **Next.js**
-3. Output Directory: leave empty
-4. Redeploy (clear cache)
-
-Env vars: see [`platform/VERCEL.md`](platform/VERCEL.md) and [`platform/.env.example`](platform/.env.example).
+Full checklist: [`platform/VERCEL.md`](platform/VERCEL.md)
 
 ## Local development
 
