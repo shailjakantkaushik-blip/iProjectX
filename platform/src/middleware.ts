@@ -10,6 +10,7 @@ const PUBLIC = [
   "/api/auth/signup",
   "/api/auth/logout",
   "/api/plans",
+  "/api/health",
 ];
 
 function isPublic(pathname: string) {

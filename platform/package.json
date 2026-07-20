@@ -10,7 +10,11 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "env:pull": "npx vercel env pull .env.local --yes",
+    "env:pull:development": "npx vercel env pull .env.local --environment=development --yes",
+    "env:pull:preview": "npx vercel env pull .env.local --environment=preview --yes",
+    "env:pull:production": "npx vercel env pull .env.local --environment=production --yes"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

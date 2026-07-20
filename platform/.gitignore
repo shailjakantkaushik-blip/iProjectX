@@ -30,10 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (secrets live in Vercel; local copies are pulled, never committed)
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 
 # vercel

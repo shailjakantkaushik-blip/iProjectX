@@ -54,9 +54,20 @@ Open [http://localhost:3000](http://localhost:3000).
 - Recharts + CSS motion for interactive UI
 - Tailwind CSS v4
 
-## Environment
+## Environment (Vercel)
 
-See `.env.example`. Local demo defaults to SQLite. For production, run the SQL in `../supabase/schema.sql` and point `DATABASE_URL` at Supabase (see `../supabase/README.md`).
+**Production secrets belong in Vercel → Project Settings → Environment Variables.**  
+The app reads them from `process.env` via `src/lib/env.ts` (no runtime Vercel API fetch).
+
+Local sync from Vercel:
+
+```bash
+npx vercel link
+npm run env:pull    # creates gitignored .env.local
+```
+
+See [`VERCEL.md`](./VERCEL.md) and [`../supabase/README.md`](../supabase/README.md).  
+Check config (no secrets leaked): `GET /api/health`
 
 ## Excel import / executive export
 

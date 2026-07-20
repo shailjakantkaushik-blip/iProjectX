@@ -1,9 +1,14 @@
+import { getEnv } from "@/lib/env";
+
 export function getSupabaseEnv() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  return { url, anonKey, configured: Boolean(url && anonKey) };
+  const env = getEnv();
+  return {
+    url: env.supabaseUrl,
+    anonKey: env.supabaseAnonKey,
+    configured: Boolean(env.supabaseUrl && env.supabaseAnonKey),
+  };
 }
 
 export function getServiceRoleKey() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  return getEnv().supabaseServiceRoleKey;
 }

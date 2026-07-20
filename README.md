@@ -32,7 +32,8 @@ In Supabase **SQL Editor**, copy/paste/run in order:
 1. [`supabase/schema.sql`](supabase/schema.sql) — create tables  
 2. [`supabase/sample_data_17_projects.sql`](supabase/sample_data_17_projects.sql) — seed **17 projects** + demo users  
 
-Then set `DATABASE_URL` **and** Supabase Auth keys (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) per [`supabase/README.md`](supabase/README.md).
+Set secrets in **Vercel Environment Variables** (recommended). The app reads `process.env` automatically on deploy.  
+For local: `cd platform && npx vercel link && npm run env:pull`. See [`platform/VERCEL.md`](platform/VERCEL.md).
 
 - Demo: `demo@iprojectx.com` / `demo1234` (Supabase Auth)  
 - Use **Data & Exports** for Excel + PPT/PDF  
