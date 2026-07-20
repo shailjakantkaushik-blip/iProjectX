@@ -1,21 +1,24 @@
 # Supabase setup for iProjectX
 
-## 1) Create the database
+Run these in order in **Supabase → SQL Editor** (copy / paste / Run):
 
-1. Open your Supabase project → **SQL Editor**
-2. Copy the entire contents of [`schema.sql`](./schema.sql)
-3. Paste and **Run**
+| Step | File | Purpose |
+|------|------|---------|
+| 1 | [`schema.sql`](./schema.sql) | Create all tables, indexes, triggers, plans |
+| 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | Seed demo org + **17 projects** + briefs, risks, finance, etc. |
 
-## 2) Get connection strings
+## Demo logins (after sample data)
+
+| Email | Password | Access |
+|-------|----------|--------|
+| `demo@iprojectx.com` | `demo1234` | Org owner + **Platform Admin** |
+| `exec@iprojectx.com` | `demo1234` | Executive (read-only) |
+
+Sample tenant: **Acme Digital** (`acme-digital`) with 17 projects (`PRJ-001` … `PRJ-017`).
+
+## Connection strings
 
 Supabase → **Project Settings → Database**
-
-Use:
-
-- **Transaction pooler** URI → `DATABASE_URL` (port `6543`, add `?pgbouncer=true`)
-- **Direct** URI → `DIRECT_URL` (port `5432`) for migrations
-
-Example `platform/.env`:
 
 ```env
 DATABASE_URL="postgresql://postgres.YOUR_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true"
@@ -25,7 +28,7 @@ NEXT_PUBLIC_APP_NAME="iProjectX"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-## 3) Point Prisma at Postgres
+## Point the app at Supabase
 
 In `platform/prisma/schema.prisma`:
 
@@ -37,22 +40,14 @@ datasource db {
 }
 ```
 
-Then:
-
 ```bash
 cd platform
 npx prisma generate
-npm run db:seed
 npm run dev
 ```
 
-> If tables already exist from `schema.sql`, do **not** re-run `prisma migrate dev` against an empty history — either baseline migrations or keep using the SQL file as source of truth and `db pull`/`generate`.
+If you already loaded `sample_data_17_projects.sql`, you do **not** need `npm run db:seed`.
 
-## 4) Demo logins (after seed)
+## Re-run sample data
 
-| Email | Password | Access |
-|-------|----------|--------|
-| `demo@iprojectx.com` | `demo1234` | Org owner + **Platform Admin** |
-| `exec@iprojectx.com` | `demo1234` | Executive (read-only) |
-
-Platform Admin (`/app/admin`) controls landing page copy, colors, and global Excel/PPT/PDF feature flags.
+`sample_data_17_projects.sql` deletes and recreates the `org_acme_demo` tenant, so it is safe to re-run.
