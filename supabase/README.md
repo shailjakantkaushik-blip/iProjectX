@@ -4,11 +4,11 @@
 
 | Step | File | Purpose |
 |------|------|---------|
-| 1 | [`schema.sql`](./schema.sql) | App tables (includes `Invoice` + Streamlit parity `Dependency` / Update fields) |
+| 1 | [`schema.sql`](./schema.sql) | App tables (includes Invoice + Streamlit parity models) |
 | 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | 17 projects + Supabase Auth demo users |
-| 3 | [`streamlit_parity.sql`](./streamlit_parity.sql) | **Existing DBs only** — adds Update columns + Dependency table |
+| 3 | [`streamlit_parity_full.sql`](./streamlit_parity_full.sql) | **Existing DBs** — Dependency, Benefit, FYAllocation, PhaseFinancials, Movements, Config, etc. |
 
-If the DB already existed before invoicing / Streamlit parity, run `stripe_invoices.sql` and/or `streamlit_parity.sql`.
+If the DB already existed before invoicing / Streamlit parity, run `stripe_invoices.sql` and/or `streamlit_parity_full.sql`.
 
 ## App environment (Vercel or local `.env.local`)
 

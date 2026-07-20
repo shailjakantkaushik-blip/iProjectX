@@ -41,7 +41,9 @@ export function PlotlyChart({
   className,
   height = 320,
 }: {
-  data: Data[];
+  // Plotly trace shapes vary widely; keep loose for gauges/waterfall/funnel/etc.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any[];
   layout?: Partial<Layout>;
   config?: Partial<Config>;
   className?: string;
@@ -79,7 +81,7 @@ export function GanttTimelineChart({
     Amber: "#d97706",
     Red: "#e11d48",
   };
-  const data: Data[] = rows.map((r) => ({
+  const data: any[] = rows.map((r) => ({
     type: "bar",
     orientation: "h",
     name: r.name,
@@ -162,7 +164,7 @@ export function WaterfallChart({
           increasing: { marker: { color: "#059669" } },
           decreasing: { marker: { color: "#e11d48" } },
           totals: { marker: { color: "#0f766e" } },
-        },
+        } as any,
       ]}
       layout={{ title: title ? { text: title, font: { size: 14 } } : undefined }}
     />
@@ -261,9 +263,9 @@ export function FunnelChart({
           type: "funnel",
           y: stages.map((s) => s.label),
           x: stages.map((s) => s.value),
-          textinfo: "value+percent initial",
+          textinfo: "value+percent",
           marker: { color: "#0f766e" },
-        },
+        } as any,
       ]}
       layout={{ title: title ? { text: title, font: { size: 14 } } : undefined }}
     />

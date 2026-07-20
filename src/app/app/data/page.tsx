@@ -4,6 +4,7 @@ import { getSiteConfig } from "@/lib/site-config";
 import { db } from "@/lib/db";
 import { PageHeader } from "@/components/ui";
 import { DataImportPanel, ExportPanel } from "@/components/data-tools";
+import { DataEditorPanel } from "@/components/pmo/data-editor-panel";
 
 export default async function DataPage() {
   const ctx = await getCurrentContext();
@@ -19,15 +20,19 @@ export default async function DataPage() {
   return (
     <div>
       <PageHeader
-        title="Data & Exports"
-        description="Excel round-trip import and executive PPT/PDF packs for steering presentations."
+        title="Data Editor & Exports"
+        description="Streamlit Data Editor parity — in-app register editing, Excel round-trip, and executive PPT/PDF packs."
       />
 
       <div className="grid gap-6">
+        <DataEditorPanel canEdit={canEdit(ctx.membership.role)} />
+
         {site.enableExcelImport && ctx.organization.enableExcelImport ? (
           <DataImportPanel canImport={canEdit(ctx.membership.role)} />
         ) : (
-          <p className="text-sm text-[var(--ink-soft)]">Excel import is disabled by platform or workspace settings.</p>
+          <p className="text-sm text-[var(--ink-soft)]">
+            Excel import is disabled by platform or workspace settings.
+          </p>
         )}
 
         <ExportPanel
