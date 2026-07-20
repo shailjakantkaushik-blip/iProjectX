@@ -1,10 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo, useState } from "react";
+import {
+  CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart,
+  Tooltip, XAxis, YAxis, ZAxis,
+} from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { PageHeading, SectionFrame, SectionTitle, KpiCard } from "@/components/streamlit";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from "recharts";
+import { scorePipeline, useDomainData, type PipelineIdea } from "@/lib/domain";
+import { fmtMoney } from "@/lib/portfolio-engine";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
+  SectionFrame, StatusChip,
+} from "@/components/streamlit";
+import { exportPageCsv } from "@/lib/ppt-export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,67 +22,231 @@ export const Route = createFileRoute("/_authenticated/app/demand-pipeline")({
   component: DemandPipelinePage,
 });
 
-type Idea = { name: string; strategic: number; value: number; risk: number; effort: number; score: number };
+const FIT_COLORS = ["#94a3b8", "#60a5fa", "#3b82f6", "#1d4ed8", "#0f172a"];
 
-function score(s: number, v: number, r: number, e: number) {
-  return Math.round((s * 0.3 + v * 0.4 - r * 0.15 - e * 0.15) * 20 * 10) / 10;
+function fitColor(fit: number) {
+  const i = Math.min(5, Math.max(1, Math.round(fit))) - 1;
+  return FIT_COLORS[i];
 }
 
 function DemandPipelinePage() {
   const { organization } = useAuth();
-  const { data: projects = [] } = useQuery({
-    queryKey: ["projects", organization?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!organization,
-  });
-
-  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const { pipeline, isLoading } = useDomainData(organization?.id);
+  const [localIdeas, setLocalIdeas] = useState<PipelineIdea[]>([]);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [submitterFilter, setSubmitterFilter] = useState("All");
   const [name, setName] = useState("");
+  const [submitter, setSubmitter] = useState("");
+  const [budget, setBudget] = useState(150000);
   const [s, setS] = useState(3);
   const [v, setV] = useState(3);
   const [r, setR] = useState(2);
   const [e, setE] = useState(3);
+  const [saving, setSaving] = useState(false);
 
-  const proposed = projects.filter((p) => p.status === "Not Started" || p.current_phase === "Ideation");
-  const approved = projects.filter((p) => p.status !== "Not Started");
+  const liveScore = scorePipeline(s, v, r, e);
 
-  const totalScore = ideas.length > 0 ? Math.round(ideas.reduce((sum, i) => sum + i.score, 0) / ideas.length) : 0;
+  const allIdeas = useMemo(() => {
+    const ids = new Set(localIdeas.map((i) => i.id));
+    return [...localIdeas, ...pipeline.filter((p) => !ids.has(p.id))];
+  }, [pipeline, localIdeas]);
 
-  const chartData = [
-    ...ideas.map((i) => ({ name: i.name, score: i.score })),
-    ...proposed.slice(0, 10).map((p) => ({
-      name: p.name,
-      score: score(3, p.priority === "High" ? 5 : p.priority === "Medium" ? 3 : 2, 2, 3),
-    })),
-  ].sort((a, b) => b.score - a.score).slice(0, 10);
+  const filtered = useMemo(() => {
+    return allIdeas.filter((p) => {
+      if (statusFilter !== "All" && p.status !== statusFilter) return false;
+      if (submitterFilter !== "All" && (p.submitter || "Unassigned") !== submitterFilter) return false;
+      return true;
+    });
+  }, [allIdeas, statusFilter, submitterFilter]);
+
+  const sorted = useMemo(
+    () => [...filtered].sort((a, b) => b.score - a.score),
+    [filtered],
+  );
+
+  const ideasInPipeline = filtered.length;
+  const avgScore = filtered.length
+    ? Math.round((filtered.reduce((sum, p) => sum + p.score, 0) / filtered.length) * 10) / 10
+    : 0;
+  const approved = filtered.filter((p) => p.status === "Approved").length;
+  const rejected = filtered.filter((p) => p.status === "Rejected").length;
+
+  const scatterData = sorted.map((p) => ({
+    ...p,
+    x: p.value,
+    y: p.effort,
+    z: Math.max(40, p.est_budget / 1000),
+  }));
+
+  async function addIdea() {
+    if (!name.trim()) return;
+    setSaving(true);
+    const idea: PipelineIdea = {
+      id: `local-${Date.now()}`,
+      org_id: organization?.id || "",
+      idea_name: name.trim(),
+      submitter: submitter.trim() || "PMO",
+      strategic_fit: s,
+      value: v,
+      risk: r,
+      effort: e,
+      score: liveScore,
+      status: "New",
+      est_budget: budget,
+    };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).from("demand_pipeline").insert({
+        org_id: organization?.id,
+        idea_name: idea.idea_name,
+        submitter: idea.submitter,
+        strategic_fit: idea.strategic_fit,
+        value: idea.value,
+        risk: idea.risk,
+        effort: idea.effort,
+        score: idea.score,
+        status: idea.status,
+        est_budget: idea.est_budget,
+      }).select("*").maybeSingle();
+      if (!error && data?.id) {
+        idea.id = data.id;
+      }
+    } catch {
+      // table may not exist yet — keep local
+    }
+
+    setLocalIdeas((cur) => [idea, ...cur]);
+    setName("");
+    setSaving(false);
+  }
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div>
-      <PageHeading icon="💡">Demand Pipeline</PageHeading>
-      <div className="text-sm text-muted-foreground mb-4">
-        Score new ideas and rank the intake queue before committing to the portfolio.
-      </div>
+      <PageHeading
+        icon="💡"
+        title="Demand Pipeline"
+        subtitle="Scored intake — Strategic × Value − Risk − Effort"
+      />
 
-      <SectionFrame>
-        <SectionTitle>Pipeline KPIs</SectionTitle>
+      <SectionFrame title="Filters">
+        <div className="flex flex-wrap gap-3">
+          <select
+            className="h-9 rounded-md border border-border bg-surface px-2 text-sm"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option>All</option>
+            {[...new Set(allIdeas.map((p) => p.status))].map((st) => (
+              <option key={st}>{st}</option>
+            ))}
+          </select>
+          <select
+            className="h-9 rounded-md border border-border bg-surface px-2 text-sm"
+            value={submitterFilter}
+            onChange={(e) => setSubmitterFilter(e.target.value)}
+          >
+            <option>All</option>
+            {[...new Set(allIdeas.map((p) => p.submitter || "Unassigned"))].map((sub) => (
+              <option key={sub}>{sub}</option>
+            ))}
+          </select>
+        </div>
+      </SectionFrame>
+
+      <SectionFrame title="Pipeline KPIs">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KpiCard label="Proposed / Ideation" value={proposed.length} />
-          <KpiCard label="Approved" value={approved.length} />
-          <KpiCard label="Scored Ideas" value={ideas.length} />
-          <KpiCard label="Avg Priority Score" value={totalScore || "—"} />
+          <KpiCard label="Ideas in Pipeline" value={ideasInPipeline} />
+          <KpiCard label="Avg Score" value={avgScore || "—"} accent="#1d4ed8" />
+          <KpiCard label="Approved" value={approved} accent="#16a34a" />
+          <KpiCard label="Rejected" value={rejected} accent="#dc2626" />
         </div>
       </SectionFrame>
 
       <SectionFrame>
-        <SectionTitle>Score a New Idea</SectionTitle>
+        <ChartCaption
+          title="Value × Effort bubble"
+          caption="X = Value · Y = Effort · Bubble = Budget · Colour = Strategic Fit"
+        >
+          {scatterData.length === 0 ? (
+            <EmptyState title="No ideas" description="Score a new idea or seed the demand_pipeline table." />
+          ) : (
+            <div className="h-[360px]">
+              <ResponsiveContainer>
+                <ScatterChart margin={{ top: 16, right: 16, bottom: 16, left: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.10)" />
+                  <XAxis
+                    type="number"
+                    dataKey="x"
+                    name="Value"
+                    domain={[0.5, 5.5]}
+                    ticks={[1, 2, 3, 4, 5]}
+                    fontSize={11}
+                    label={{ value: "Value", position: "insideBottom", offset: -4, fontSize: 11 }}
+                  />
+                  <YAxis
+                    type="number"
+                    dataKey="y"
+                    name="Effort"
+                    domain={[0.5, 5.5]}
+                    ticks={[1, 2, 3, 4, 5]}
+                    fontSize={11}
+                    label={{ value: "Effort", angle: -90, position: "insideLeft", fontSize: 11 }}
+                  />
+                  <ZAxis type="number" dataKey="z" range={[80, 500]} name="Budget" />
+                  <Tooltip
+                    cursor={{ strokeDasharray: "3 3" }}
+                    formatter={(val: number, key: string) => {
+                      if (key === "z") return [fmtMoney(Number(val) * 1000), "Budget (~)"];
+                      return [val, key === "x" ? "Value" : key === "y" ? "Effort" : key];
+                    }}
+                    labelFormatter={(_, payload) => payload?.[0]?.payload?.idea_name ?? ""}
+                  />
+                  <Scatter data={scatterData} name="Ideas">
+                    {scatterData.map((d) => (
+                      <Cell key={d.id} fill={fitColor(d.strategic_fit)} />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </ChartCaption>
+      </SectionFrame>
+
+      <SectionFrame title="Score a New Idea">
         <div className="grid gap-4">
-          <div>
-            <Label>Idea name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Customer portal MVP" />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label htmlFor="idea-name">Idea name</Label>
+              <Input
+                id="idea-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Customer portal MVP"
+              />
+            </div>
+            <div>
+              <Label htmlFor="idea-submitter">Submitter</Label>
+              <Input
+                id="idea-submitter"
+                value={submitter}
+                onChange={(e) => setSubmitter(e.target.value)}
+                placeholder="Sponsor / BU"
+              />
+            </div>
+            <div>
+              <Label htmlFor="idea-budget">Est. budget ($)</Label>
+              <Input
+                id="idea-budget"
+                type="number"
+                min={0}
+                value={budget}
+                onChange={(e) => setBudget(Number(e.target.value) || 0)}
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
@@ -85,66 +257,88 @@ function DemandPipelinePage() {
             ].map((f) => (
               <div key={f.label}>
                 <Label>{f.label} — {f.val}</Label>
-                <Slider min={1} max={5} step={1} value={[f.val]} onValueChange={(x) => f.set(x[0])} />
+                <Slider
+                  min={1}
+                  max={5}
+                  step={1}
+                  value={[f.val]}
+                  onValueChange={(x) => f.set(x[0])}
+                />
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-sm">Priority Score: <strong>{score(s, v, r, e)}</strong></div>
-            <Button
-              disabled={!name.trim()}
-              onClick={() => {
-                setIdeas((cur) => [...cur, { name, strategic: s, value: v, risk: r, effort: e, score: score(s, v, r, e) }]);
-                setName("");
-              }}
-            >
-              Add to Pipeline
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="text-sm text-heading">
+              Live score: <strong className="text-lg tabular-nums">{liveScore}</strong>
+              <span className="ml-2 text-xs text-muted-foreground">
+                (S×0.3 + V×0.4 − R×0.15 − E×0.15) × 20
+              </span>
+            </div>
+            <Button disabled={!name.trim() || saving} onClick={addIdea}>
+              {saving ? "Saving…" : "Add to Pipeline"}
             </Button>
           </div>
         </div>
       </SectionFrame>
 
-      <SectionFrame>
-        <SectionTitle>Top-Ranked Intake</SectionTitle>
-        <div className="h-72">
-          <ResponsiveContainer>
-            <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.08)" />
-              <XAxis type="number" domain={[0, 100]} fontSize={11} />
-              <YAxis type="category" dataKey="name" width={160} fontSize={11} />
-              <Tooltip />
-              <Bar dataKey="score" fill="#1d4ed8" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </SectionFrame>
-
-      {ideas.length > 0 && (
-        <SectionFrame>
-          <SectionTitle>Scored Ideas ({ideas.length})</SectionTitle>
+      <SectionFrame title={`Pipeline backlog (${sorted.length})`}>
+        {sorted.length === 0 ? (
+          <EmptyState title="No ideas in pipeline" description="Score a new idea to start the intake queue." />
+        ) : (
           <div className="overflow-x-auto">
             <table className="st-table">
               <thead>
                 <tr>
-                  <th>Idea</th><th>Strategic</th><th>Value</th><th>Risk</th><th>Effort</th><th>Score</th>
+                  <th>#</th>
+                  <th>Idea</th>
+                  <th>Submitter</th>
+                  <th className="text-right">Strategic</th>
+                  <th className="text-right">Value</th>
+                  <th className="text-right">Risk</th>
+                  <th className="text-right">Effort</th>
+                  <th className="text-right">Score</th>
+                  <th className="text-right">Budget</th>
+                  <th>Decision / Status</th>
                 </tr>
               </thead>
               <tbody>
-                {ideas.map((i, k) => (
-                  <tr key={k}>
-                    <td className="font-medium">{i.name}</td>
-                    <td>{i.strategic}</td>
-                    <td>{i.value}</td>
-                    <td>{i.risk}</td>
-                    <td>{i.effort}</td>
-                    <td>{i.score}</td>
+                {sorted.map((p, i) => (
+                  <tr key={p.id}>
+                    <td>{i + 1}</td>
+                    <td className="font-medium">{p.idea_name}</td>
+                    <td>{p.submitter || "—"}</td>
+                    <td className="text-right tabular-nums">{p.strategic_fit}</td>
+                    <td className="text-right tabular-nums">{p.value}</td>
+                    <td className="text-right tabular-nums">{p.risk}</td>
+                    <td className="text-right tabular-nums">{p.effort}</td>
+                    <td className="text-right font-semibold tabular-nums">{p.score}</td>
+                    <td className="text-right tabular-nums">{fmtMoney(p.est_budget)}</td>
+                    <td><StatusChip status={p.status} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </SectionFrame>
-      )}
+        )}
+        <ExportBar
+          onCsv={() =>
+            exportPageCsv(
+              "demand-pipeline.csv",
+              sorted.map((p) => ({
+                idea: p.idea_name,
+                submitter: p.submitter,
+                strategic_fit: p.strategic_fit,
+                value: p.value,
+                risk: p.risk,
+                effort: p.effort,
+                score: p.score,
+                budget: p.est_budget,
+                status: p.status,
+              })),
+            )
+          }
+        />
+      </SectionFrame>
     </div>
   );
 }

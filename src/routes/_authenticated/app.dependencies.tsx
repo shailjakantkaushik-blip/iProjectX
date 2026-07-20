@@ -1,120 +1,254 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { PageHeading, SectionFrame, SectionTitle, KpiCard, RagChip } from "@/components/streamlit";
+import { useDomainData, type Dependency } from "@/lib/domain";
 import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip,
-} from "recharts";
+  EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
+  SectionFrame, StatusChip,
+} from "@/components/streamlit";
+import { exportPageCsv } from "@/lib/ppt-export";
 
 export const Route = createFileRoute("/_authenticated/app/dependencies")({
   component: DependenciesPage,
 });
 
-/**
- * Dependencies are derived from shared program/sponsor pairs — projects sharing
- * both a program and a sponsor are considered dependent. A dedicated
- * `dependencies` table can replace this heuristic later.
- */
+const STATUS_COLOR: Record<string, string> = {
+  Healthy: "#16a34a",
+  "At Risk": "#f59e0b",
+  Blocked: "#dc2626",
+};
+
+function startOfDay(d = new Date()) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function isNeededByOverdue(d: Dependency) {
+  if (!d.needed_by) return false;
+  const s = d.status.toLowerCase();
+  if (s === "complete" || s === "completed" || s === "resolved") return false;
+  return startOfDay(new Date(d.needed_by)) < startOfDay();
+}
+
+function shortName(name: string, max = 14) {
+  return name.length > max ? `${name.slice(0, max)}…` : name;
+}
+
 function DependenciesPage() {
   const { organization } = useAuth();
-  const { data: projects = [] } = useQuery({
-    queryKey: ["projects", organization?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!organization,
-  });
+  const { dependencies, projects, isLoading } = useDomainData(organization?.id);
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [impactFilter, setImpactFilter] = useState("All");
 
-  const deps: {
-    from: string; to: string; program: string; sponsor: string;
-    fromRag?: string | null; toRag?: string | null; status: string;
-  }[] = [];
-  for (let i = 0; i < projects.length; i++) {
-    for (let j = i + 1; j < projects.length; j++) {
-      const a = projects[i], b = projects[j];
-      if (a.program && a.program === b.program && a.sponsor && a.sponsor === b.sponsor) {
-        const blocked = a.rag === "Red" || b.rag === "Red";
-        deps.push({
-          from: a.name, to: b.name,
-          program: a.program, sponsor: a.sponsor || "—",
-          fromRag: a.rag, toRag: b.rag,
-          status: blocked ? "Blocked" : "Active",
-        });
-      }
+  const filtered = useMemo(() => {
+    return dependencies.filter((d) => {
+      if (typeFilter !== "All" && d.type !== typeFilter) return false;
+      if (statusFilter !== "All" && d.status !== statusFilter) return false;
+      if (impactFilter !== "All" && (d.impact || "—") !== impactFilter) return false;
+      return true;
+    });
+  }, [dependencies, typeFilter, statusFilter, impactFilter]);
+
+  const involved = useMemo(() => {
+    const names = new Set<string>();
+    for (const d of filtered) {
+      if (d.from_name) names.add(d.from_name);
+      if (d.to_name) names.add(d.to_name);
     }
-  }
+    if (names.size === 0) {
+      for (const p of projects.slice(0, 12)) names.add(p.name);
+    }
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }, [filtered, projects]);
 
-  const total = deps.length;
-  const blocked = deps.filter((d) => d.status === "Blocked").length;
-  const active = total - blocked;
+  const matrix = useMemo(() => {
+    const set = new Set(filtered.map((d) => `${d.from_name}|${d.to_name}`));
+    return involved.map((from) =>
+      involved.map((to) => (from !== to && set.has(`${from}|${to}`) ? "→" : "")),
+    );
+  }, [filtered, involved]);
 
-  const byProgram = Array.from(
-    deps.reduce((m: Map<string, number>, d) => m.set(d.program, (m.get(d.program) || 0) + 1), new Map()).entries(),
-  ).map(([program, count]) => ({ program, count })).sort((a, b) => b.count - a.count);
+  const healthy = filtered.filter((d) => d.status === "Healthy").length;
+  const atRisk = filtered.filter((d) => d.status === "At Risk").length;
+  const blocked = filtered.filter((d) => d.status === "Blocked").length;
+
+  if (isLoading) return <PageSkeleton />;
 
   return (
     <div>
-      <PageHeading icon="🔗">Dependencies</PageHeading>
+      <PageHeading
+        icon="🔗"
+        title="Cross-Project Dependencies"
+        subtitle="Dependency matrix, network links and needed-by tracking"
+      />
 
-      <SectionFrame>
-        <SectionTitle>Dependency KPIs</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KpiCard label="Total Links" value={total} />
-          <KpiCard label="Active" value={active} />
-          <KpiCard label="Blocked" value={blocked} />
-          <KpiCard label="Cross-Program" value={0} />
+      <SectionFrame title="Filters">
+        <div className="flex flex-wrap gap-3">
+          <select
+            className="h-9 rounded-md border border-border bg-surface px-2 text-sm"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option>All</option>
+            {[...new Set(dependencies.map((d) => d.type))].map((t) => (
+              <option key={t}>{t}</option>
+            ))}
+          </select>
+          <select
+            className="h-9 rounded-md border border-border bg-surface px-2 text-sm"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option>All</option>
+            {[...new Set(dependencies.map((d) => d.status))].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <select
+            className="h-9 rounded-md border border-border bg-surface px-2 text-sm"
+            value={impactFilter}
+            onChange={(e) => setImpactFilter(e.target.value)}
+          >
+            <option>All</option>
+            {[...new Set(dependencies.map((d) => d.impact || "—"))].map((i) => (
+              <option key={i}>{i}</option>
+            ))}
+          </select>
         </div>
       </SectionFrame>
 
-      <SectionFrame>
-        <SectionTitle>Dependency Density by Program</SectionTitle>
-        <div className="h-64">
-          <ResponsiveContainer>
-            <BarChart data={byProgram}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(11,18,32,0.08)" />
-              <XAxis dataKey="program" fontSize={11} />
-              <YAxis allowDecimals={false} fontSize={11} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      <SectionFrame title="Dependency KPIs">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <KpiCard label="Total Links" value={filtered.length} />
+          <KpiCard label="Projects Involved" value={involved.length} />
+          <KpiCard label="Healthy" value={healthy} accent="#16a34a" />
+          <KpiCard label="At Risk" value={atRisk} accent="#f59e0b" />
+          <KpiCard label="Blocked" value={blocked} accent="#dc2626" />
         </div>
       </SectionFrame>
 
-      <SectionFrame>
-        <SectionTitle>Dependency Register ({deps.length})</SectionTitle>
-        {deps.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
-            No dependencies detected. Projects sharing a program + sponsor will appear here.
-          </div>
+      <SectionFrame title="Dependency matrix">
+        {filtered.length === 0 || involved.length === 0 ? (
+          <EmptyState title="No dependencies" description="Dependencies appear when projects share a program or the dependencies table is seeded." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="st-table">
+            <table className="st-table text-[11px]">
               <thead>
                 <tr>
-                  <th>From</th><th>From RAG</th><th>To</th><th>To RAG</th>
-                  <th>Program</th><th>Sponsor</th><th>Status</th>
+                  <th className="sticky left-0 bg-surface">From \\ To</th>
+                  {involved.map((n) => (
+                    <th key={n} className="min-w-[64px] text-center" title={n}>
+                      {shortName(n, 10)}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {deps.map((d, i) => (
-                  <tr key={i}>
-                    <td className="font-medium">{d.from}</td>
-                    <td><RagChip rag={d.fromRag} /></td>
-                    <td className="font-medium">{d.to}</td>
-                    <td><RagChip rag={d.toRag} /></td>
-                    <td>{d.program}</td>
-                    <td>{d.sponsor}</td>
-                    <td>{d.status}</td>
+                {involved.map((from, ri) => (
+                  <tr key={from}>
+                    <td className="sticky left-0 bg-surface font-medium" title={from}>
+                      {shortName(from)}
+                    </td>
+                    {matrix[ri].map((cell, ci) => (
+                      <td
+                        key={`${from}-${involved[ci]}`}
+                        className={`text-center ${cell ? "bg-blue-50 font-bold text-blue-700" : "text-muted-foreground"}`}
+                      >
+                        {cell || (ri === ci ? "·" : "")}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
+      </SectionFrame>
+
+      <SectionFrame title="Network list">
+        {filtered.length === 0 ? (
+          <EmptyState title="No links" />
+        ) : (
+          <ul className="space-y-2">
+            {filtered.map((d) => {
+              const color = STATUS_COLOR[d.status] || "#64748b";
+              return (
+                <li
+                  key={d.id}
+                  className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm"
+                >
+                  <span className="font-medium text-heading">{d.from_name || d.from_project_id}</span>
+                  <span style={{ color }} className="font-bold">→</span>
+                  <span className="font-medium text-heading">{d.to_name || d.to_project_id}</span>
+                  <StatusChip status={d.status} />
+                  <span className="text-xs text-muted-foreground">{d.type}</span>
+                  {d.impact && (
+                    <span className="text-xs text-muted-foreground">Impact: {d.impact}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </SectionFrame>
+
+      <SectionFrame title={`Dependencies register (${filtered.length})`}>
+        {filtered.length === 0 ? (
+          <EmptyState title="No dependencies" description="Dependencies appear when projects share a program or the dependencies table is seeded." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="st-table">
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Impact</th>
+                  <th>Needed By</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((d) => {
+                  const overdue = isNeededByOverdue(d);
+                  return (
+                    <tr key={d.id} className={overdue ? "bg-red-50/80" : undefined}>
+                      <td className="font-medium">{d.from_name || "—"}</td>
+                      <td className="font-medium">{d.to_name || "—"}</td>
+                      <td>{d.type}</td>
+                      <td><StatusChip status={d.status} /></td>
+                      <td>{d.impact || "—"}</td>
+                      <td className={overdue ? "font-semibold text-red-700" : undefined}>
+                        {d.needed_by || "—"}
+                        {overdue ? " · overdue" : ""}
+                      </td>
+                      <td className="max-w-[240px] truncate">{d.description || "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <ExportBar
+          onCsv={() =>
+            exportPageCsv(
+              "dependencies.csv",
+              filtered.map((d) => ({
+                from: d.from_name,
+                to: d.to_name,
+                type: d.type,
+                status: d.status,
+                impact: d.impact,
+                needed_by: d.needed_by,
+                description: d.description,
+              })),
+            )
+          }
+        />
       </SectionFrame>
     </div>
   );
