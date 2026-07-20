@@ -1,18 +1,26 @@
 import { redirect } from "next/navigation";
-import { getCurrentContext } from "@/lib/auth";
+import { canEdit, getCurrentContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { riskScore } from "@/lib/utils";
+import { RisksClient } from "@/components/pmo/risks-client";
 
 export default async function RisksPage() {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
 
-  const risks = await db.risk.findMany({
-    where: { organizationId: ctx.organization.id },
-    include: { project: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const [risks, projects] = await Promise.all([
+    db.risk.findMany({
+      where: { organizationId: ctx.organization.id },
+      include: { project: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+    db.project.findMany({
+      where: { organizationId: ctx.organization.id },
+      select: { id: true, code: true, name: true },
+      orderBy: { code: "asc" },
+    }),
+  ]);
 
   const ranked = [...risks].sort(
     (a, b) =>
@@ -23,8 +31,8 @@ export default async function RisksPage() {
   return (
     <div>
       <PageHeader
-        title="Risks"
-        description="Probability × Impact × Velocity scoring with mitigation ownership."
+        title="Risk Intelligence"
+        description="Probability × Impact × Velocity scoring with mitigation ownership — Streamlit Risks parity."
       />
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
@@ -37,6 +45,8 @@ export default async function RisksPage() {
           </Card>
         ))}
       </div>
+
+      <RisksClient projects={projects} canEdit={canEdit(ctx.membership.role)} />
 
       <Card>
         <div className="table-wrap">

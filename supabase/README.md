@@ -4,10 +4,11 @@
 
 | Step | File | Purpose |
 |------|------|---------|
-| 1 | [`schema.sql`](./schema.sql) | App tables (includes `Invoice` for Stripe billing) |
+| 1 | [`schema.sql`](./schema.sql) | App tables (includes `Invoice` + Streamlit parity `Dependency` / Update fields) |
 | 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | 17 projects + Supabase Auth demo users |
+| 3 | [`streamlit_parity.sql`](./streamlit_parity.sql) | **Existing DBs only** — adds Update columns + Dependency table |
 
-If the DB already existed before invoicing was added, re-run `schema.sql` (safe `create table if not exists`) or at least the `"Invoice"` block.
+If the DB already existed before invoicing / Streamlit parity, run `stripe_invoices.sql` and/or `streamlit_parity.sql`.
 
 ## App environment (Vercel or local `.env.local`)
 

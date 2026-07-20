@@ -393,8 +393,30 @@ create table if not exists "Update" (
   title              text not null,
   body               text not null,
   category           text not null default 'General',
-  "createdAt"        timestamptz not null default now()
+  "projectName"      text,
+  impact             text not null default 'Medium',
+  author             text,
+  "updateDate"       timestamptz,
+  "createdAt"        timestamptz not null default now(),
+  "updatedAt"        timestamptz not null default now()
 );
+
+create table if not exists "Dependency" (
+  id                 text primary key default gen_random_uuid()::text,
+  "organizationId"   text not null references "Organization"(id) on delete cascade,
+  "fromProjectId"    text,
+  "toProjectId"      text,
+  "fromName"         text not null,
+  "toName"           text not null,
+  "dependencyType"   text not null default 'Finish-to-Start',
+  status             text not null default 'Healthy',
+  impact             text not null default 'Medium',
+  notes              text,
+  "createdAt"        timestamptz not null default now(),
+  "updatedAt"        timestamptz not null default now()
+);
+
+create index if not exists "Dependency_organizationId_idx" on "Dependency"("organizationId");
 
 -- Import audit log
 create table if not exists "ImportJob" (

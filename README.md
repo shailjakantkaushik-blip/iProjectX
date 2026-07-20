@@ -26,6 +26,7 @@ Demo (after Supabase sample SQL): `demo@iprojectx.com` / `demo1234`
 
 1. [`supabase/schema.sql`](supabase/schema.sql)
 2. [`supabase/sample_data_17_projects.sql`](supabase/sample_data_17_projects.sql)
+3. Existing DBs: also run [`supabase/streamlit_parity.sql`](supabase/streamlit_parity.sql)
 
 ## Legacy Streamlit app
 

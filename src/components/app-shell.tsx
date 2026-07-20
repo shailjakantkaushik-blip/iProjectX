@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { BrandTheme } from "@/lib/branding";
 import {
@@ -15,29 +15,78 @@ import {
   GitBranch,
   LayoutDashboard,
   LogOut,
+  Network,
   Palette,
+  PieChart,
   Settings2,
   Shield,
   ShieldAlert,
   Sparkles,
+  Target,
+  TrendingUp,
   Users,
   Workflow,
+  Layers3,
+  ListChecks,
+  Megaphone,
+  Scale,
+  Waypoints,
 } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState, useTransition } from "react";
 
-const BASE_NAV = [
-  { href: "/app", label: "Executive Cockpit", icon: LayoutDashboard },
-  { href: "/app/projects", label: "Projects", icon: FolderKanban },
-  { href: "/app/programs", label: "Programs", icon: Boxes },
-  { href: "/app/delivery", label: "Delivery", icon: Workflow },
-  { href: "/app/financials", label: "Financials", icon: CircleDollarSign },
-  { href: "/app/risks", label: "Risks", icon: ShieldAlert },
-  { href: "/app/pipeline", label: "Demand Pipeline", icon: GitBranch },
-  { href: "/app/resources", label: "Resources", icon: Users },
-  { href: "/app/agile", label: "Agile & Releases", icon: CalendarRange },
-  { href: "/app/governance", label: "Governance", icon: Activity },
-  { href: "/app/data", label: "Data & Exports", icon: Database },
-  { href: "/app/settings", label: "Workspace Settings", icon: Settings2 },
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
+
+type NavHub = { title: string; items: NavItem[] };
+
+const HUBS: NavHub[] = [
+  {
+    title: "HOME",
+    items: [
+      { href: "/app", label: "Executive Cockpit", icon: LayoutDashboard },
+      { href: "/app/updates", label: "Latest Updates", icon: Megaphone },
+    ],
+  },
+  {
+    title: "PORTFOLIO",
+    items: [
+      { href: "/app/projects", label: "Projects", icon: FolderKanban },
+      { href: "/app/programs", label: "Programs", icon: Boxes },
+      { href: "/app/segmentation", label: "Segmentation", icon: PieChart },
+      { href: "/app/prioritisation", label: "Prioritisation", icon: Target },
+      { href: "/app/pipeline", label: "Demand Pipeline", icon: GitBranch },
+    ],
+  },
+  {
+    title: "DELIVERY",
+    items: [
+      { href: "/app/timeline", label: "Timeline", icon: Waypoints },
+      { href: "/app/delivery", label: "Roadmap × Governance", icon: Workflow },
+      { href: "/app/stage-gates", label: "Stage Gates", icon: ListChecks },
+      { href: "/app/agile", label: "Agile / Sprints", icon: CalendarRange },
+      { href: "/app/channels", label: "Governance Channels", icon: Scale },
+      { href: "/app/dependencies", label: "Dependencies", icon: Network },
+      { href: "/app/resources", label: "Resources", icon: Users },
+    ],
+  },
+  {
+    title: "FINANCIALS",
+    items: [
+      { href: "/app/financials", label: "Financials", icon: CircleDollarSign },
+      { href: "/app/fy-allocation", label: "FY Allocation", icon: Layers3 },
+      { href: "/app/cost-benefit", label: "Cost vs Benefit", icon: TrendingUp },
+      { href: "/app/benefits", label: "Benefits", icon: Sparkles },
+    ],
+  },
+  {
+    title: "GOVERNANCE & INSIGHTS",
+    items: [
+      { href: "/app/risks", label: "Risks", icon: ShieldAlert },
+      { href: "/app/governance", label: "Decisions & Actions", icon: Activity },
+      { href: "/app/releases", label: "Release Register", icon: Gauge },
+      { href: "/app/data", label: "Data & Exports", icon: Database },
+      { href: "/app/settings", label: "Workspace Settings", icon: Settings2 },
+    ],
+  },
 ];
 
 export function AppShell({
@@ -47,6 +96,7 @@ export function AppShell({
   role,
   planName,
   isPlatformAdmin = false,
+  fyOptions = [],
 }: {
   children: ReactNode;
   brand: BrandTheme;
@@ -54,22 +104,50 @@ export function AppShell({
   role: string;
   planName: string;
   isPlatformAdmin?: boolean;
+  fyOptions?: string[];
 }) {
-  const NAV = useMemo(
-    () =>
-      isPlatformAdmin
-        ? [...BASE_NAV, { href: "/app/admin", label: "Platform Admin", icon: Shield }]
-        : BASE_NAV,
-    [isPlatformAdmin]
-  );
+  const hubs = useMemo(() => {
+    if (!isPlatformAdmin) return HUBS;
+    return HUBS.map((hub, idx) =>
+      idx === HUBS.length - 1
+        ? {
+            ...hub,
+            items: [
+              ...hub.items,
+              { href: "/app/admin", label: "Platform Admin", icon: Shield },
+            ],
+          }
+        : hub
+    );
+  }, [isPlatformAdmin]);
+
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const selectedFy = searchParams.get("fy") || "All";
+
+  function setFy(fy: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!fy || fy === "All") params.delete("fy");
+    else params.set("fy", fy);
+    const q = params.toString();
+    startTransition(() => {
+      router.push(q ? `${pathname}?${q}` : pathname);
+      router.refresh();
+    });
+  }
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
     router.refresh();
+  }
+
+  function isActive(href: string) {
+    if (href === "/app") return pathname === "/app";
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (
@@ -85,11 +163,11 @@ export function AppShell({
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-40 w-72 border-r border-[var(--line)] bg-white/80 p-5 backdrop-blur-xl transition md:static md:translate-x-0",
+            "fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-[var(--line)] bg-white/90 p-5 backdrop-blur-xl transition md:static md:translate-x-0",
             open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           )}
         >
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex items-center gap-3">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-xl text-white"
@@ -98,44 +176,78 @@ export function AppShell({
                 <Gauge className="h-5 w-5" />
               </div>
               <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-soft)]">
+                  PMO Portfolio
+                </p>
                 <p className="font-[family-name:var(--font-display)] text-lg leading-tight">
                   {brand.brandName}
                 </p>
-                <p className="text-xs text-[var(--ink-soft)]">{planName} · {role}</p>
+                <p className="text-xs text-[var(--ink-soft)]">
+                  {planName} · {role}
+                </p>
               </div>
             </div>
           </div>
 
-          <nav className="space-y-1">
-            {NAV.map((item) => {
-              const active =
-                item.href === "/app"
-                  ? pathname === "/app"
-                  : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-                    active
-                      ? "bg-[var(--brand-primary)] text-white shadow-sm"
-                      : "text-[var(--ink-soft)] hover:bg-black/5 hover:text-[var(--ink)]"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
+          <div className="mb-5 rounded-xl bg-black/[0.03] p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink-soft)]">
+              Financial Year
+            </p>
+            <select
+              className="mt-1 w-full rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm"
+              value={selectedFy}
+              disabled={pending}
+              onChange={(e) => setFy(e.target.value)}
+            >
+              <option value="All">All years</option>
+              {fyOptions.map((fy) => (
+                <option key={fy} value={fy}>
+                  {fy}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <nav className="space-y-5">
+            {hubs.map((hub) => (
+              <div key={hub.title}>
+                <p className="mb-1 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink-soft)]">
+                  {hub.title}
+                </p>
+                <div className="space-y-0.5">
+                  {hub.items.map((item) => {
+                    const active = isActive(item.href);
+                    const href =
+                      selectedFy !== "All"
+                        ? `${item.href}?fy=${encodeURIComponent(selectedFy)}`
+                        : item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+                          active
+                            ? "bg-[var(--brand-primary)] text-white shadow-sm"
+                            : "text-[var(--ink-soft)] hover:bg-black/5 hover:text-[var(--ink)]"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           <div className="mt-8 rounded-2xl bg-[var(--brand-secondary)] p-4 text-white">
             <Sparkles className="h-4 w-4 text-teal-200" />
-            <p className="mt-2 text-sm font-semibold">White-label controls</p>
+            <p className="mt-2 text-sm font-semibold">Streamlit parity workspace</p>
             <p className="mt-1 text-xs text-teal-50/80">
-              Customize brand colors, logo, and domain in Workspace Settings.
+              Same PMO hubs: Home, Portfolio, Delivery, Financials, Governance.
             </p>
             <Link
               href="/app/settings/branding"
@@ -144,10 +256,6 @@ export function AppShell({
               <Palette className="h-3.5 w-3.5" /> Open branding
             </Link>
           </div>
-
-          {!brand.hidePoweredBy ? (
-            <p className="mt-6 text-[11px] text-[var(--ink-soft)]">Powered by iProjectX</p>
-          ) : null}
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -159,12 +267,15 @@ export function AppShell({
               Menu
             </button>
             <div className="hidden text-sm text-[var(--ink-soft)] md:block">
-              {brand.loginTagline}
+              {brand.loginTagline || "Enterprise project management & delivery"}
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-semibold">{userName}</p>
-                <p className="text-xs capitalize text-[var(--ink-soft)]">{role.replace("_", " ")}</p>
+                <p className="text-xs capitalize text-[var(--ink-soft)]">
+                  {role.replace("_", " ")}
+                  {selectedFy !== "All" ? ` · FY ${selectedFy}` : ""}
+                </p>
               </div>
               <button
                 onClick={logout}

@@ -94,6 +94,7 @@ model Organization {
   invitations      Invitation[]
   importJobs       ImportJob[]
   invoices         Invoice[]
+  dependencies     Dependency[]
 }
 
 /// Stripe / enterprise invoice issued to an organization
@@ -434,5 +435,32 @@ model Update {
   title          String
   body           String
   category       String       @default("General")
+  /// Streamlit Latest Updates parity fields
+  projectName    String?
+  impact         String       @default("Medium") // High | Medium | Low
+  author         String?
+  updateDate     DateTime?
   createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+/// Cross-project dependency links — Streamlit Dependencies sheet parity
+model Dependency {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fromProjectId  String?
+  toProjectId    String?
+  fromName       String
+  toName         String
+  dependencyType String       @default("Finish-to-Start")
+  status         String       @default("Healthy") // Healthy | At Risk | Blocked
+  impact         String       @default("Medium")
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
 }
