@@ -120,6 +120,26 @@ export function checkEnv(): EnvCheck {
       "DATABASE_URL looks like SQLite (file:...). This app requires a Supabase PostgreSQL URL (postgresql://...)."
     );
   }
+  if (env.databaseUrl && env.databaseUrl.startsWith("postgresql")) {
+    try {
+      // eslint-disable-next-line no-new
+      new URL(env.databaseUrl);
+    } catch {
+      hints.push(
+        "DATABASE_URL is malformed (often an unescaped @ # / % in the DB password). URL-encode the password, e.g. @ → %40, then redeploy."
+      );
+    }
+  }
+  if (env.directUrl && env.directUrl.startsWith("postgresql")) {
+    try {
+      // eslint-disable-next-line no-new
+      new URL(env.directUrl);
+    } catch {
+      hints.push(
+        "DIRECT_URL is malformed — URL-encode special characters in the database password, then redeploy."
+      );
+    }
+  }
   if (!env.supabaseServiceRoleKey) {
     hints.push("SUPABASE_SERVICE_ROLE_KEY is optional but required for member invites via Auth Admin.");
   }
