@@ -2,15 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentContext, isAdminRole } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isStripeConfigured } from "@/lib/stripe";
 import { Badge, Card, PageHeader } from "@/components/ui";
-import { BillingForm, MembersForm, WorkspaceFeaturesForm } from "@/components/settings-forms";
+import { MembersForm, WorkspaceFeaturesForm } from "@/components/settings-forms";
+import { OrgInvoicePanel } from "@/components/invoice-billing";
 import { priceLabel } from "@/lib/plans";
 
 export default async function SettingsPage() {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
 
-  const [plans, members, projectCount] = await Promise.all([
+  const [plans, members, projectCount, invoices] = await Promise.all([
     db.plan.findMany({ orderBy: { sortOrder: "asc" } }),
     db.membership.findMany({
       where: { organizationId: ctx.organization.id },
@@ -18,6 +20,11 @@ export default async function SettingsPage() {
       orderBy: { createdAt: "asc" },
     }),
     db.project.count({ where: { organizationId: ctx.organization.id } }),
+    db.invoice.findMany({
+      where: { organizationId: ctx.organization.id },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
   ]);
 
   const plan = ctx.organization.plan;
@@ -27,7 +34,7 @@ export default async function SettingsPage() {
     <div>
       <PageHeader
         title="Workspace Settings"
-        description="Manage subscription seats, team access, and white-label enterprise branding."
+        description="Manage subscription invoices, team access, and white-label enterprise branding."
         action={
           <Link
             href="/app/settings/branding"
@@ -63,36 +70,48 @@ export default async function SettingsPage() {
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+      <div className="mt-6 space-y-6">
         {admin ? (
-          <BillingForm
-            plans={plans}
+          <OrgInvoicePanel
+            plans={plans.map((p) => ({
+              slug: p.slug,
+              name: p.name,
+              monthlyPrice: p.monthlyPrice,
+              annualPrice: p.annualPrice,
+              seatLimit: p.seatLimit,
+            }))}
             currentPlanSlug={plan?.slug || "starter"}
             seatCount={ctx.organization.seatCount}
             memberCount={members.length}
+            billingEmail={ctx.organization.billingEmail || ctx.user.email}
+            invoices={invoices}
+            stripeConfigured={isStripeConfigured()}
           />
         ) : (
           <Card>
             <h3 className="font-[family-name:var(--font-display)] text-xl">Subscription</h3>
             <p className="mt-2 text-sm text-[var(--ink-soft)]">
-              {plan?.name} · {plan ? priceLabel(plan.monthlyPrice) : "—"}/mo. Contact an admin to change plans.
+              {plan?.name} · {plan ? priceLabel(plan.monthlyPrice) : "—"}/mo. Contact an admin to
+              request an invoice or change plans.
             </p>
           </Card>
         )}
 
-        {admin ? (
-          <WorkspaceFeaturesForm
-            initial={{
-              enableExcelImport: ctx.organization.enableExcelImport,
-              enablePptExport: ctx.organization.enablePptExport,
-              enablePdfExport: ctx.organization.enablePdfExport,
-            }}
-          />
-        ) : (
-          <MembersForm canManage={false} />
-        )}
+        <div className="grid gap-6 xl:grid-cols-2">
+          {admin ? (
+            <WorkspaceFeaturesForm
+              initial={{
+                enableExcelImport: ctx.organization.enableExcelImport,
+                enablePptExport: ctx.organization.enablePptExport,
+                enablePdfExport: ctx.organization.enablePdfExport,
+              }}
+            />
+          ) : (
+            <MembersForm canManage={false} />
+          )}
 
-        <MembersForm canManage={admin} />
+          <MembersForm canManage={admin} />
+        </div>
       </div>
 
       <Card className="mt-6">

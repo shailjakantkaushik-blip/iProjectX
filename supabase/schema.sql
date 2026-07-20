@@ -135,6 +135,34 @@ create table if not exists "Membership" (
   unique ("organizationId", "userId")
 );
 
+create table if not exists "Invoice" (
+  id                   text primary key default gen_random_uuid()::text,
+  "organizationId"     text not null references "Organization"(id) on delete cascade,
+  "stripeInvoiceId"    text unique,
+  "stripeCustomerId"   text,
+  number               text,
+  status               text not null default 'draft',
+  "amountDue"          integer not null default 0,
+  "amountPaid"         integer not null default 0,
+  currency             text not null default 'usd',
+  description          text,
+  "planSlug"           text,
+  "seatCount"          integer,
+  interval             text,
+  "hostedInvoiceUrl"   text,
+  "invoicePdf"         text,
+  "dueDate"            timestamptz,
+  "paidAt"             timestamptz,
+  "createdByUserId"    text,
+  "createdAt"          timestamptz not null default now(),
+  "updatedAt"          timestamptz not null default now()
+);
+create index if not exists "Invoice_organizationId_idx" on "Invoice" ("organizationId");
+create index if not exists "Invoice_status_idx" on "Invoice" (status);
+drop trigger if exists invoice_set_updated_at on "Invoice";
+create trigger invoice_set_updated_at before update on "Invoice"
+for each row execute function public.set_updated_at();
+
 create table if not exists "Invitation" (
   id                 text primary key default gen_random_uuid()::text,
   "organizationId"   text not null references "Organization"(id) on delete cascade,

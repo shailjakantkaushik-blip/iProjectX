@@ -16,6 +16,9 @@ export type AppEnv = {
   supabaseUrl: string;
   supabaseAnonKey: string;
   supabaseServiceRoleKey: string;
+  stripeSecretKey: string;
+  stripeWebhookSecret: string;
+  stripePublishableKey: string;
   appName: string;
   appUrl: string;
   isVercel: boolean;
@@ -34,6 +37,9 @@ export function getEnv(): AppEnv {
     supabaseUrl: read("NEXT_PUBLIC_SUPABASE_URL"),
     supabaseAnonKey: read("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     supabaseServiceRoleKey: read("SUPABASE_SERVICE_ROLE_KEY"),
+    stripeSecretKey: read("STRIPE_SECRET_KEY"),
+    stripeWebhookSecret: read("STRIPE_WEBHOOK_SECRET"),
+    stripePublishableKey: read("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
     appName: read("NEXT_PUBLIC_APP_NAME", "iProjectX"),
     appUrl: read("NEXT_PUBLIC_APP_URL", "http://localhost:3000"),
     isVercel: read("VERCEL") === "1",
@@ -55,7 +61,14 @@ const REQUIRED = [
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
 ] as const;
 
-const OPTIONAL = ["DIRECT_URL", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_APP_URL"] as const;
+const OPTIONAL = [
+  "DIRECT_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "NEXT_PUBLIC_APP_URL",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+] as const;
 
 /** Validate required config without exposing secret values. */
 export function checkEnv(): EnvCheck {
@@ -80,7 +93,13 @@ export function checkEnv(): EnvCheck {
         ? env.directUrl
         : key === "SUPABASE_SERVICE_ROLE_KEY"
           ? env.supabaseServiceRoleKey
-          : env.appUrl;
+          : key === "NEXT_PUBLIC_APP_URL"
+            ? env.appUrl
+            : key === "STRIPE_SECRET_KEY"
+              ? env.stripeSecretKey
+              : key === "STRIPE_WEBHOOK_SECRET"
+                ? env.stripeWebhookSecret
+                : env.stripePublishableKey;
     if (value) present.push(key);
   }
 
@@ -98,6 +117,12 @@ export function checkEnv(): EnvCheck {
   }
   if (!env.supabaseServiceRoleKey) {
     hints.push("SUPABASE_SERVICE_ROLE_KEY is optional but required for member invites via Auth Admin.");
+  }
+  if (!env.stripeSecretKey) {
+    hints.push("STRIPE_SECRET_KEY is required to create and send enterprise invoices.");
+  }
+  if (env.stripeSecretKey && !env.stripeWebhookSecret) {
+    hints.push("STRIPE_WEBHOOK_SECRET is required so paid invoices can activate subscriptions.");
   }
 
   return {

@@ -21,6 +21,8 @@ export async function GET() {
       databaseConfigured: Boolean(env.databaseUrl),
       supabaseAuthConfigured: Boolean(env.supabaseUrl && env.supabaseAnonKey),
       serviceRoleConfigured: Boolean(env.supabaseServiceRoleKey),
+      stripeConfigured: Boolean(env.stripeSecretKey),
+      stripeWebhookConfigured: Boolean(env.stripeWebhookSecret),
     },
     hints: check.hints,
   });

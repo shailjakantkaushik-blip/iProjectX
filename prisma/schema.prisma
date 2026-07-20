@@ -92,6 +92,35 @@ model Organization {
   updates          Update[]
   invitations      Invitation[]
   importJobs       ImportJob[]
+  invoices         Invoice[]
+}
+
+/// Stripe / enterprise invoice issued to an organization
+model Invoice {
+  id               String       @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stripeInvoiceId  String?      @unique
+  stripeCustomerId String?
+  number           String?
+  status           String       @default("draft") // draft | open | paid | void | uncollectible | payment_failed
+  amountDue        Int          @default(0) // cents
+  amountPaid       Int          @default(0) // cents
+  currency         String       @default("usd")
+  description      String?
+  planSlug         String?
+  seatCount        Int?
+  interval         String?      // month | year
+  hostedInvoiceUrl String?
+  invoicePdf       String?
+  dueDate          DateTime?
+  paidAt           DateTime?
+  createdByUserId  String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
 }
 
 model User {

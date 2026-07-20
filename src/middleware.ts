@@ -11,10 +11,12 @@ const PUBLIC = [
   "/api/auth/logout",
   "/api/plans",
   "/api/health",
+  "/api/webhooks/stripe",
 ];
 
 function isPublic(pathname: string) {
   if (PUBLIC.includes(pathname)) return true;
+  if (pathname.startsWith("/api/webhooks/")) return true;
   if (pathname.startsWith("/_next")) return true;
   if (pathname.startsWith("/favicon")) return true;
   if (pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico)$/)) return true;

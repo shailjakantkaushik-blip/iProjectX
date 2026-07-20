@@ -33,6 +33,10 @@ Settings → Environment Variables (Production + Preview), then redeploy:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_PUBLIC_APP_NAME` = `iProjectX`
 - `NEXT_PUBLIC_APP_URL` = `https://i-project-x.vercel.app`
+- `STRIPE_SECRET_KEY` (enterprise invoices)
+- `STRIPE_WEBHOOK_SECRET` (payment confirmation)
+
+See [`STRIPE.md`](STRIPE.md) for webhook endpoint setup.
 
 ## Cleanup
 

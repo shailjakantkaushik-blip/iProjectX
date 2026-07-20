@@ -4,8 +4,10 @@
 
 | Step | File | Purpose |
 |------|------|---------|
-| 1 | [`schema.sql`](./schema.sql) | App tables |
+| 1 | [`schema.sql`](./schema.sql) | App tables (includes `Invoice` for Stripe billing) |
 | 2 | [`sample_data_17_projects.sql`](./sample_data_17_projects.sql) | 17 projects + Supabase Auth demo users |
+
+If the DB already existed before invoicing was added, re-run `schema.sql` (safe `create table if not exists`) or at least the `"Invoice"` block.
 
 ## App environment (Vercel or local `.env.local`)
 
