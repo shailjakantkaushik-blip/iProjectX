@@ -32,8 +32,14 @@ In Supabase **SQL Editor**, copy/paste/run in order:
 1. [`supabase/schema.sql`](supabase/schema.sql) — create tables  
 2. [`supabase/sample_data_17_projects.sql`](supabase/sample_data_17_projects.sql) — seed **17 projects** + demo users  
 
-Set secrets in **Vercel Environment Variables** (recommended). The app reads `process.env` automatically on deploy.  
-For local: `cd platform && npx vercel link && npm run env:pull`. See [`platform/VERCEL.md`](platform/VERCEL.md).
+### Vercel deploy (avoid 404 NOT_FOUND)
+
+Set **Root Directory** to `platform` in Vercel → Settings → General.  
+If Root Directory is the repo root, you get `404: NOT_FOUND` because Next.js lives only under `platform/`.
+
+Set secrets in **Vercel Environment Variables**. The app reads `process.env` on deploy.  
+Local: `cd platform && npx vercel link && npm run env:pull`.  
+Full guide: [`platform/VERCEL.md`](platform/VERCEL.md).
 
 - Demo: `demo@iprojectx.com` / `demo1234` (Supabase Auth)  
 - Use **Data & Exports** for Excel + PPT/PDF  

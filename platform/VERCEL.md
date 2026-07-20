@@ -1,47 +1,62 @@
-# Vercel environment setup
+# Vercel deployment (fix 404 NOT_FOUND)
 
-## How env vars work (important)
+## Why you see `404: NOT_FOUND` (Code: NOT_FOUND, ID: syd1::…)
 
-You do **not** fetch secrets from the Vercel API inside the app.
+This repo is a **monorepo**:
 
-1. Set variables in **Vercel → Project → Settings → Environment Variables**
-2. On deploy, Vercel injects them into `process.env`
-3. App code reads `process.env` via `src/lib/env.ts`
+- Repo **root** = legacy Streamlit/Python app (no Next.js)
+- **`platform/`** = the real Next.js SaaS app
 
-That is the supported, secure path.
+If Vercel’s **Root Directory** is `.` (repo root), the deploy has nothing valid to serve → **404 NOT_FOUND**.
 
-## Variables to add in Vercel
+## Fix (required)
 
-| Name | Environment | Notes |
-|------|-------------|-------|
-| `DATABASE_URL` | Production, Preview | Supabase pooler URI (`?pgbouncer=true`) |
-| `DIRECT_URL` | Production, Preview | Supabase direct URI (migrations) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview | Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview | Anon/public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Production, Preview | Server-only; never expose to browser |
-| `NEXT_PUBLIC_APP_NAME` | Production, Preview | e.g. `iProjectX` |
-| `NEXT_PUBLIC_APP_URL` | Production, Preview | Your Vercel URL |
+1. Open [Vercel Dashboard](https://vercel.com/dashboard) → your project  
+2. **Settings → General → Root Directory**  
+3. Click **Edit** → set to:
 
-Leave secrets **out of Git**. Only `.env.example` stays in the repo.
+   ```text
+   platform
+   ```
 
-## Local development (pull from Vercel)
+4. **Save**
+5. **Settings → Build & Development Settings**
+   - Framework Preset: **Next.js**
+   - Build Command: leave default / `prisma generate && next build` (from `platform/package.json`)
+   - Output Directory: **leave empty** (do not set `.next` manually)
+6. **Deployments → … on latest → Redeploy** (or push a new commit)
 
-```bash
-cd platform
-npx vercel login
-npx vercel link          # once — connects this folder to the Vercel project
-npm run env:pull         # writes gitignored .env.local from Vercel
-npm run dev
-```
+## Environment variables
 
-`npm run env:pull` runs `vercel env pull .env.local`.
+Still set these under **Settings → Environment Variables** (Production + Preview):
+
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_APP_NAME`
+- `NEXT_PUBLIC_APP_URL` (your `https://….vercel.app` URL)
+
+Then redeploy.
 
 ## Verify
 
-After deploy (or locally with `.env.local`):
+After a successful deploy:
 
 ```bash
 curl https://YOUR_APP.vercel.app/api/health
 ```
 
-You should see `"ok": true` and `"source": "vercel"` on Vercel.
+Expect `"ok": true` and `"source": "vercel"`.
+
+Home page `/` and `/login` should load (not the Vercel NOT_FOUND page).
+
+## Local pull from Vercel
+
+```bash
+cd platform
+npx vercel link
+npm run env:pull
+npm run dev
+```
