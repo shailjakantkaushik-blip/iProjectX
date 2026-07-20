@@ -2,14 +2,13 @@
 
 Enterprise project management and delivery SaaS (Next.js + Supabase).
 
-## Vercel (use `i-project-x-fozw`)
+## Live site
 
-- **Root Directory:** empty (repo root)
-- **Framework:** Next.js
-- **Output Directory:** empty
-- Delete the old **`i-project-x`** project if you still have it
+**https://i-project-x.vercel.app**
 
-Full checklist: [`VERCEL.md`](VERCEL.md)
+Use Vercel project **`i-project-x`**. Delete **`i-project-x-fozw`** (broken production domain).
+
+Deploy settings: [`VERCEL.md`](VERCEL.md)
 
 ## Local development
 

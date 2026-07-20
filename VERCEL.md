@@ -1,47 +1,41 @@
-# Vercel deployment (`i-project-x-fozw`)
+# Vercel — use `i-project-x` (working)
 
-The Next.js app is at the **repository root**.
+**Live URL:** https://i-project-x.vercel.app
 
-Use project **`i-project-x-fozw`**. You can delete **`i-project-x`**.
+Do **not** use `i-project-x-fozw`. Its production domain returns `404: NOT_FOUND`. Delete that project in the Vercel dashboard.
 
-## Required settings
+## Confirmed working
 
-Vercel → **i-project-x-fozw** → Settings → General:
+| Check | Result |
+|-------|--------|
+| https://i-project-x.vercel.app/ | 200 — landing page |
+| https://i-project-x.vercel.app/login | 200 |
+| https://i-project-x.vercel.app/api/health | JSON health payload |
+
+## Settings for `i-project-x`
+
+Settings → General:
 
 | Setting | Value |
 |--------|--------|
-| **Root Directory** | **empty** (Edit → Clear) |
-| **Framework Preset** | `Next.js` |
-| **Build Command** | default |
-| **Output Directory** | **EMPTY** (Reset if set) |
-| **Install Command** | default |
+| Root Directory | **empty** |
+| Framework Preset | **Next.js** |
+| Output Directory | **empty** |
 
-Redeploy with **Use existing Build Cache** unchecked.
+## Add missing env vars (required for login/data)
 
-Wrong **Output Directory** (e.g. `public`) causes `404: NOT_FOUND` even when the deploy “succeeds”.
-
-## Domains
-
-Settings → Domains → ensure `i-project-x-fozw.vercel.app` is on **Production**.
-
-## Deployment Protection
-
-Settings → Deployment Protection → Production = **None** while testing (otherwise URLs redirect to Vercel login).
-
-## Environment variables
-
-Production + Preview:
+Settings → Environment Variables (Production + Preview), then redeploy:
 
 - `DATABASE_URL`
 - `DIRECT_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_APP_NAME`
-- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_APP_NAME` = `iProjectX`
+- `NEXT_PUBLIC_APP_URL` = `https://i-project-x.vercel.app`
 
-## Verify
+## Cleanup
 
-1. Deployments → latest Production → **Visit**
-2. `/` loads the landing page
-3. `/api/health` returns JSON
+1. Open https://i-project-x.vercel.app
+2. Vercel → delete project **`i-project-x-fozw`**
+3. Disconnect that project from the GitHub repo if prompted
