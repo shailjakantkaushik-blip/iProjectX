@@ -58,6 +58,16 @@ function AuthPage() {
     navigate({ to: "/app", replace: true });
   };
 
+  const onGoogle = async () => {
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/app` },
+    });
+    setBusy(false);
+    if (error) toast.error(error.message);
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md">
@@ -92,6 +102,21 @@ function AuthPage() {
                 </form>
               </TabsContent>
             </Tabs>
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={busy}
+              onClick={() => void onGoogle()}
+            >
+              Continue with Google
+            </Button>
           </CardContent>
         </Card>
       </div>

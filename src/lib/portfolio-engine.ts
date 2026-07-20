@@ -176,13 +176,17 @@ export type ExecKpis = {
   projectsOnTrackPct: number;
   projectsAtRiskPct: number;
   projectsDelayedPct: number;
-  totalPortfolioProjects: number;
-  totalActivePrograms: number;
-  totalInitiativesInPipeline: number;
+  /** Spec §5.1 Delivery — Business Strategic + IT Strategic */
+  totalStrategicPrograms: number;
+  /** Spec §5.1 Delivery — portfolioCategory === CAPEX */
+  totalCapexPrograms: number;
+  /** Spec §5.1 Delivery — portfolioCategory === Unfunded */
+  totalUnfundedInitiatives: number;
   benefitsForecast: number;
   benefitsRealised: number;
   decisionsAwaiting: number;
-  averageActions: number;
+  /** Spec §5.1 — default 0; home page overrides with real action data */
+  overdueActions: number;
   upcomingStageGates: number;
 };
 
@@ -202,25 +206,15 @@ export function executiveKpis(projects: ProjectLike[]): ExecKpis {
   const amber = projects.filter((p) => p.rag === "Amber").length;
   const red = projects.filter((p) => p.rag === "Red").length;
 
-  const programs = new Set(
-    projects.map((p) => (p.program || "").trim()).filter((x) => x && x !== "Unfunded"),
-  );
-  const pipeline = projects.filter((p) => {
-    const s = (p.status || "").toLowerCase();
-    return s === "not started" || s === "on hold";
-  }).length;
+  const categories = projects.map(portfolioCategory);
+  const totalStrategicPrograms = categories.filter(
+    (c) => c === "Business Strategic" || c === "IT Strategic",
+  ).length;
+  const totalCapexPrograms = categories.filter((c) => c === "CAPEX").length;
+  const totalUnfundedInitiatives = categories.filter((c) => c === "Unfunded").length;
 
   const benefitsForecast = projects.reduce((s, p) => s + n(p.benefits_target), 0);
   const benefitsRealised = projects.reduce((s, p) => s + n(p.benefits_realised), 0);
-
-  const today = new Date();
-  const upcomingGates = projects.filter((p) => {
-    if (!p.target_go_live && !p.end_date) return false;
-    const d = new Date(p.target_go_live || p.end_date || "");
-    if (!Number.isFinite(d.getTime())) return false;
-    const diff = daysBetween(today, d);
-    return diff >= 0 && diff <= 30;
-  }).length;
 
   return {
     totalPortfolioValue: approved,
@@ -233,14 +227,14 @@ export function executiveKpis(projects: ProjectLike[]): ExecKpis {
     projectsOnTrackPct: total ? Math.round((1000 * green) / total) / 10 : 0,
     projectsAtRiskPct: total ? Math.round((1000 * amber) / total) / 10 : 0,
     projectsDelayedPct: total ? Math.round((1000 * red) / total) / 10 : 0,
-    totalPortfolioProjects: total,
-    totalActivePrograms: programs.size,
-    totalInitiativesInPipeline: pipeline,
+    totalStrategicPrograms,
+    totalCapexPrograms,
+    totalUnfundedInitiatives,
     benefitsForecast,
     benefitsRealised,
-    decisionsAwaiting: Math.min(1, Math.floor(total / 10) || (total ? 1 : 0)),
-    averageActions: 0,
-    upcomingStageGates: upcomingGates || Math.min(5, total),
+    decisionsAwaiting: 0,
+    overdueActions: 0,
+    upcomingStageGates: 0,
   };
 }
 

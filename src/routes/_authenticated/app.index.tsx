@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Bar,
@@ -12,10 +11,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
 import {
   KpiCard,
   PageHeading,
+  PageSkeleton,
   RagChip,
   SectionFrame,
   SectionTitle,
@@ -23,6 +22,7 @@ import {
   type SheetColumn,
 } from "@/components/streamlit";
 import { useAuth } from "@/lib/auth-context";
+import { useDomainData } from "@/lib/domain";
 import {
   budgetForecastByFy,
   computeProjectHealth,
@@ -39,24 +39,35 @@ export const Route = createFileRoute("/_authenticated/app/")({
   component: ExecutiveCockpit,
 });
 
+function startOfDay(d = new Date()) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function daysBetween(a: Date, b: Date) {
+  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
+}
+
+function isActionComplete(status: string) {
+  const s = status.toLowerCase();
+  return s === "complete" || s === "completed" || s === "closed" || s === "done";
+}
+
 function ExecutiveCockpit() {
   const { organization } = useAuth();
   const [seeding, setSeeding] = useState(false);
 
   const {
-    data: projects = [],
+    projects,
+    decisions,
+    actions,
+    stageGates,
+    benefits,
     isLoading,
     error: loadError,
     refetch,
-  } = useQuery({
-    queryKey: ["projects", organization?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*");
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!organization,
-  });
+  } = useDomainData(organization?.id);
 
   const loadSample = async () => {
     if (!organization) return;
@@ -78,10 +89,54 @@ function ExecutiveCockpit() {
     }
   };
 
-  const kpis = useMemo(() => executiveKpis(projects), [projects]);
+  const baseKpis = useMemo(() => executiveKpis(projects), [projects]);
   const segments = useMemo(() => segmentSummary(projects), [projects]);
   const health = useMemo(() => computeProjectHealth(projects), [projects]);
   const fy = useMemo(() => budgetForecastByFy(projects), [projects]);
+
+  const kpis = useMemo(() => {
+    const today = startOfDay();
+
+    const decisionsAwaiting = decisions.filter((d) => {
+      const s = (d.status || "").toLowerCase();
+      return s === "open" || s === "in review";
+    }).length;
+
+    const overdueActions = actions.filter((a) => {
+      if ((a.status || "").toLowerCase() === "overdue") return true;
+      if (isActionComplete(a.status || "")) return false;
+      if (!a.due_date) return false;
+      return startOfDay(new Date(a.due_date)) < today;
+    }).length;
+
+    const upcomingStageGates = stageGates.filter((g) => {
+      const s = (g.status || "").toLowerCase();
+      if (s === "approved" || s === "complete" || s === "completed") return false;
+      if (!g.planned_date) return false;
+      const d = startOfDay(new Date(g.planned_date));
+      if (!Number.isFinite(d.getTime())) return false;
+      const diff = daysBetween(today, d);
+      return diff >= 0 && diff <= 30;
+    }).length;
+
+    const benefitsForecast =
+      benefits.length > 0
+        ? benefits.reduce((s, b) => s + Number(b.target_value || 0), 0)
+        : baseKpis.benefitsForecast;
+    const benefitsRealised =
+      benefits.length > 0
+        ? benefits.reduce((s, b) => s + Number(b.realised_value || 0), 0)
+        : baseKpis.benefitsRealised;
+
+    return {
+      ...baseKpis,
+      benefitsForecast,
+      benefitsRealised,
+      decisionsAwaiting,
+      overdueActions,
+      upcomingStageGates,
+    };
+  }, [baseKpis, decisions, actions, stageGates, benefits]);
 
   const financialCards: [string, string][] = [
     ["Total Portfolio Value", fmtMoney(kpis.totalPortfolioValue)],
@@ -94,19 +149,19 @@ function ExecutiveCockpit() {
   ];
 
   const deliveryCards: [string, string][] = [
-    ["Projects on Track (%)", `${kpis.projectsOnTrackPct.toFixed(1)}%`],
-    ["Projects at Risk (%)", `${kpis.projectsAtRiskPct.toFixed(1)}%`],
-    ["Projects Delayed (%)", `${kpis.projectsDelayedPct.toFixed(1)}%`],
-    ["Total Portfolio Projects", String(kpis.totalPortfolioProjects)],
-    ["Total Active Programs", String(kpis.totalActivePrograms)],
-    ["Total Initiatives in Pipeline", String(kpis.totalInitiativesInPipeline)],
+    ["Projects On Track %", `${kpis.projectsOnTrackPct.toFixed(1)}%`],
+    ["At Risk %", `${kpis.projectsAtRiskPct.toFixed(1)}%`],
+    ["Delayed %", `${kpis.projectsDelayedPct.toFixed(1)}%`],
+    ["Total Strategic Programs", String(kpis.totalStrategicPrograms)],
+    ["Total CAPEX Programs", String(kpis.totalCapexPrograms)],
+    ["Total Unfunded Initiatives", String(kpis.totalUnfundedInitiatives)],
   ];
 
   const benefitsCards: [string, string][] = [
     ["Benefits Forecast", fmtMoney(kpis.benefitsForecast)],
     ["Benefits Realised", fmtMoney(kpis.benefitsRealised)],
     ["Decisions Awaiting Approval", String(kpis.decisionsAwaiting)],
-    ["Average Actions", String(kpis.averageActions)],
+    ["Overdue Actions", String(kpis.overdueActions)],
     ["Upcoming Stage Gates", String(kpis.upcomingStageGates)],
   ];
 
@@ -216,6 +271,8 @@ function ExecutiveCockpit() {
     },
   ];
 
+  if (isLoading) return <PageSkeleton />;
+
   return (
     <div className="space-y-1">
       <PageHeading icon="📊" title="Executive Cockpit" />
@@ -224,9 +281,7 @@ function ExecutiveCockpit() {
         {organization?.name ? ` · ${organization.name}` : null}
       </p>
 
-      {isLoading ? (
-        <div className="py-16 text-center text-sm text-muted-foreground">Loading portfolio…</div>
-      ) : loadError ? (
+      {loadError ? (
         <SectionFrame>
           <p className="text-sm font-medium text-destructive">Couldn’t load projects</p>
           <p className="mt-1 text-sm text-muted-foreground">
