@@ -3,7 +3,9 @@ import { canEdit, getCurrentContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { filterByFy } from "@/lib/pmo/engines";
+import { dependencyTopoOrder } from "@/lib/pmo/analytics";
 import { DependenciesClient } from "@/components/pmo/dependencies-client";
+import { GanttTimelineChart } from "@/components/pmo/plotly-charts";
 
 export default async function DependenciesPage({
   searchParams,
@@ -14,8 +16,8 @@ export default async function DependenciesPage({
   if (!ctx) redirect("/login");
   const { fy } = await searchParams;
 
-  const projects = filterByFy(
-    await db.project.findMany({
+  const [allProjects, deps] = await Promise.all([
+    db.project.findMany({
       where: { organizationId: ctx.organization.id },
       select: {
         id: true,
@@ -26,16 +28,17 @@ export default async function DependenciesPage({
         endDate: true,
         rag: true,
         portfolioCategory: true,
+        progress: true,
       },
       orderBy: { name: "asc" },
     }),
-    fy
-  );
+    db.dependency.findMany({
+      where: { organizationId: ctx.organization.id },
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
 
-  const deps = await db.dependency.findMany({
-    where: { organizationId: ctx.organization.id },
-    orderBy: { updatedAt: "desc" },
-  });
+  const projects = filterByFy(allProjects, fy);
 
   const projectNames = new Set(projects.map((p) => p.name));
   const filtered =
@@ -48,12 +51,31 @@ export default async function DependenciesPage({
   const blocked = filtered.filter((d) => d.status === "Blocked").length;
   const involved = new Set(filtered.flatMap((d) => [d.fromName, d.toName])).size;
 
+  const topoOrder = dependencyTopoOrder(
+    deps.map((d) => ({ fromName: d.fromName, toName: d.toName })),
+    projects.map((p) => ({ name: p.name, startDate: p.startDate }))
+  );
+
+  const topoIndexMap = new Map(topoOrder.map((name, idx) => [name, idx]));
+
+  const ganttRows = projects
+    .filter((p) => p.startDate && p.endDate)
+    .sort((a, b) => (topoIndexMap.get(a.name) ?? 999) - (topoIndexMap.get(b.name) ?? 999))
+    .map((p) => ({
+      name: `${p.code} ${p.name}`,
+      start: new Date(p.startDate!).toISOString().slice(0, 10),
+      end: new Date(p.endDate!).toISOString().slice(0, 10),
+      progress: p.progress,
+      rag: p.rag,
+    }));
+
   return (
     <div>
       <PageHeader
         title="Dependencies"
-        description="Cross-project dependency links — Streamlit Dependencies parity."
+        description="Cross-project dependency links with topology-ordered Gantt — Streamlit Dependencies parity."
       />
+
       <div className="mb-6 grid gap-4 md:grid-cols-4">
         <Card>
           <p className="text-xs uppercase text-[var(--ink-soft)]">Total links</p>
@@ -65,15 +87,27 @@ export default async function DependenciesPage({
         </Card>
         <Card>
           <p className="text-xs uppercase text-[var(--ink-soft)]">Healthy</p>
-          <p className="kpi-value mt-2 text-3xl">{healthy}</p>
+          <p className="kpi-value mt-2 text-3xl text-emerald-700">{healthy}</p>
         </Card>
         <Card>
           <p className="text-xs uppercase text-[var(--ink-soft)]">At risk / blocked</p>
-          <p className="kpi-value mt-2 text-3xl">
-            {atRisk} / {blocked}
+          <p className="kpi-value mt-2 text-3xl text-amber-600">
+            {atRisk} / <span className="text-rose-700">{blocked}</span>
           </p>
         </Card>
       </div>
+
+      {ganttRows.length > 0 && (
+        <Card className="mb-6">
+          <h3 className="font-[family-name:var(--font-display)] text-xl">
+            Topology-ordered Gantt
+          </h3>
+          <p className="mt-1 text-xs text-[var(--ink-soft)]">
+            Projects sorted by dependency topological order (predecessors before successors)
+          </p>
+          <GanttTimelineChart rows={ganttRows} title="Dependency-ordered project timeline" />
+        </Card>
+      )}
 
       <Card className="mb-6">
         <h3 className="font-[family-name:var(--font-display)] text-xl">Dependency register</h3>
@@ -86,6 +120,7 @@ export default async function DependenciesPage({
                 <th>Type</th>
                 <th>Status</th>
                 <th>Impact</th>
+                <th>Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -97,19 +132,24 @@ export default async function DependenciesPage({
                   <td>
                     <Badge
                       tone={
-                        d.status === "Healthy" ? "green" : d.status === "Blocked" ? "red" : "amber"
+                        d.status === "Healthy"
+                          ? "green"
+                          : d.status === "Blocked"
+                          ? "red"
+                          : "amber"
                       }
                     >
                       {d.status}
                     </Badge>
                   </td>
                   <td>{d.impact}</td>
+                  <td className="max-w-xs text-xs">{d.notes || "—"}</td>
                 </tr>
               ))}
               {!filtered.length ? (
                 <tr>
-                  <td colSpan={5} className="text-[var(--ink-soft)]">
-                    No dependencies yet. Add links below (or import the Dependencies sheet).
+                  <td colSpan={6} className="text-[var(--ink-soft)]">
+                    No dependencies yet. Add links below or import the Dependencies sheet.
                   </td>
                 </tr>
               ) : null}

@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import type { BrandTheme } from "@/lib/branding";
 import {
   Activity,
+  BarChart3,
+  BookOpen,
   Boxes,
   CalendarRange,
   CircleDollarSign,
@@ -22,6 +24,7 @@ import {
   Shield,
   ShieldAlert,
   Sparkles,
+  SlidersHorizontal,
   Target,
   TrendingUp,
   Users,
@@ -29,6 +32,7 @@ import {
   Layers3,
   ListChecks,
   Megaphone,
+  MoveHorizontal,
   Scale,
   Waypoints,
 } from "lucide-react";
@@ -44,6 +48,7 @@ const HUBS: NavHub[] = [
     items: [
       { href: "/app", label: "Executive Cockpit", icon: LayoutDashboard },
       { href: "/app/updates", label: "Latest Updates", icon: Megaphone },
+      { href: "/app/about", label: "About This App", icon: BookOpen },
     ],
   },
   {
@@ -53,6 +58,7 @@ const HUBS: NavHub[] = [
       { href: "/app/programs", label: "Programs", icon: Boxes },
       { href: "/app/segmentation", label: "Segmentation", icon: PieChart },
       { href: "/app/prioritisation", label: "Prioritisation", icon: Target },
+      { href: "/app/movements", label: "Movements", icon: MoveHorizontal },
       { href: "/app/pipeline", label: "Demand Pipeline", icon: GitBranch },
     ],
   },
@@ -66,6 +72,7 @@ const HUBS: NavHub[] = [
       { href: "/app/channels", label: "Governance Channels", icon: Scale },
       { href: "/app/dependencies", label: "Dependencies", icon: Network },
       { href: "/app/resources", label: "Resources", icon: Users },
+      { href: "/app/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },
   {
@@ -73,17 +80,20 @@ const HUBS: NavHub[] = [
     items: [
       { href: "/app/financials", label: "Financials", icon: CircleDollarSign },
       { href: "/app/fy-allocation", label: "FY Allocation", icon: Layers3 },
+      { href: "/app/phase-financials", label: "Phase Financials", icon: Gauge },
       { href: "/app/cost-benefit", label: "Cost vs Benefit", icon: TrendingUp },
       { href: "/app/benefits", label: "Benefits", icon: Sparkles },
     ],
   },
   {
-    title: "GOVERNANCE & INSIGHTS",
+    title: "GOVERNANCE",
     items: [
       { href: "/app/risks", label: "Risks", icon: ShieldAlert },
       { href: "/app/governance", label: "Decisions & Actions", icon: Activity },
       { href: "/app/releases", label: "Release Register", icon: Gauge },
+      { href: "/app/reports", label: "Executive Reports", icon: BarChart3 },
       { href: "/app/data", label: "Data & Exports", icon: Database },
+      { href: "/app/configuration", label: "Configuration", icon: SlidersHorizontal },
       { href: "/app/settings", label: "Workspace Settings", icon: Settings2 },
     ],
   },

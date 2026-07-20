@@ -95,6 +95,15 @@ model Organization {
   importJobs       ImportJob[]
   invoices         Invoice[]
   dependencies     Dependency[]
+  benefits         Benefit[]
+  costBenefitYears CostBenefitYear[]
+  fyAllocations    FyAllocation[]
+  portfolioMoves   PortfolioMovement[]
+  phaseFinancials  PhaseFinancial[]
+  projectLinks     ProjectLink[]
+  prioritisation   PrioritisationScore[]
+  orgConfig        OrgConfigItem[]
+  raidItems        RaidItem[]
 }
 
 /// Stripe / enterprise invoice issued to an organization
@@ -459,6 +468,176 @@ model Dependency {
   status         String       @default("Healthy") // Healthy | At Risk | Blocked
   impact         String       @default("Medium")
   notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+/// Benefits register — Streamlit Benefits sheet
+model Benefit {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  projectCode    String?
+  projectName    String?
+  title          String
+  benefitType    String       @default("Financial") // Financial | Non-Financial | Efficiency | Risk Reduction
+  targetValue    Float        @default(0)
+  realisedValue  Float        @default(0)
+  owner          String?
+  status         String       @default("Tracked")
+  fy             String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+/// Year-by-year cost vs benefit — Streamlit CostBenefit sheet
+model CostBenefitYear {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  projectCode    String?
+  projectName    String?
+  year           Int
+  capex          Float        @default(0)
+  opex           Float        @default(0)
+  benefitRecurring Float      @default(0)
+  benefitOneOff  Float        @default(0)
+  notes          String?
+
+  @@index([organizationId])
+  @@unique([organizationId, projectCode, year])
+}
+
+/// Per-project FY % allocation — Streamlit FYAllocation sheet
+model FyAllocation {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  projectCode    String
+  projectName    String?
+  fy             String
+  budgetPct      Float        @default(0)
+  forecastPct    Float        @default(0)
+  budgetAmount   Float        @default(0)
+  forecastAmount Float        @default(0)
+  notes          String?
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@unique([organizationId, projectCode, fy])
+}
+
+/// Portfolio category change audit — Streamlit PortfolioMovements
+model PortfolioMovement {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  projectCode    String
+  projectName    String?
+  fromCategory   String
+  toCategory     String
+  reason         String?
+  changedBy      String?
+  effectiveDate  DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+}
+
+/// Per-stage financial tracking — Streamlit PhaseFinancials
+model PhaseFinancial {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  projectCode    String
+  projectName    String?
+  stage          String
+  plannedStart   DateTime?
+  plannedEnd     DateTime?
+  actualStart    DateTime?
+  actualEnd      DateTime?
+  budget         Float        @default(0)
+  forecast       Float        @default(0)
+  actual         Float        @default(0)
+  status         String       @default("Planned")
+  notes          String?
+
+  @@index([organizationId])
+}
+
+/// Project document links — Streamlit ProjectLinks
+model ProjectLink {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  projectCode    String
+  label          String
+  url            String
+  linkType       String       @default("Document")
+
+  @@index([organizationId])
+}
+
+/// Weighted prioritisation matrix — Streamlit Prioritisation sheet
+model PrioritisationScore {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId          String?
+  projectCode        String
+  projectName        String?
+  strategicAlignment Int          @default(3)
+  benefitValue       Int          @default(3)
+  riskReduction      Int          @default(2)
+  compliance         Int          @default(2)
+  complexity         Int          @default(3)
+  score              Float        @default(0)
+  notes              String?
+  updatedAt          DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@unique([organizationId, projectCode])
+}
+
+/// Workspace Config dropdowns / thresholds — Streamlit Config + ConfigRules
+model OrgConfigItem {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category       String // Status | Priority | Theme | Threshold | FYStartMonth | StageA | StageB
+  key            String
+  value          String
+  sortOrder      Int          @default(0)
+
+  @@index([organizationId])
+  @@unique([organizationId, category, key])
+}
+
+/// RAID register (Assumptions / Issues beyond Risks+Decisions)
+model RaidItem {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  projectCode    String?
+  raidType       String // Assumption | Issue | Dependency | Constraint
+  title          String
+  description    String?
+  owner          String?
+  status         String       @default("Open")
+  impact         String       @default("Medium")
+  dueDate        DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 

@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { getCurrentContext } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { Badge, Card, PageHeader } from "@/components/ui";
+import { Card, PageHeader, Badge } from "@/components/ui";
 import { filterByFy } from "@/lib/pmo/engines";
-import { formatPct } from "@/lib/utils";
+import { TimelineClient } from "@/components/pmo/timeline-client";
 
 export default async function TimelinePage({
   searchParams,
@@ -14,72 +14,139 @@ export default async function TimelinePage({
   if (!ctx) redirect("/login");
   const { fy } = await searchParams;
 
-  const projects = filterByFy(
-    await db.project.findMany({
-      where: { organizationId: ctx.organization.id },
-      include: { milestones: true, stageGates: true },
-      orderBy: { startDate: "asc" },
-    }),
-    fy
-  );
+  const allProjects = await db.project.findMany({
+    where: { organizationId: ctx.organization.id },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+      rag: true,
+      progress: true,
+      financialYear: true,
+      portfolioCategory: true,
+      theme: true,
+      businessUnit: true,
+      programId: true,
+      priority: true,
+      governanceChannel: true,
+    },
+    orderBy: { startDate: "asc" },
+  });
 
-  const dated = projects.filter((p) => p.startDate && p.endDate);
-  const min = dated.length
-    ? Math.min(...dated.map((p) => new Date(p.startDate!).getTime()))
-    : Date.now();
-  const max = dated.length
-    ? Math.max(...dated.map((p) => new Date(p.endDate!).getTime()))
-    : Date.now() + 1;
-  const span = Math.max(1, max - min);
+  const projects = filterByFy(allProjects, fy);
+
+  const programs = await db.program.findMany({
+    where: { organizationId: ctx.organization.id },
+    select: { id: true, name: true },
+  });
+  const programMap = new Map(programs.map((p) => [p.id, p.name]));
+
+  const projectRows = projects.map((p) => ({
+    id: p.id,
+    code: p.code,
+    name: p.name,
+    startDate: p.startDate ? p.startDate.toISOString() : null,
+    endDate: p.endDate ? p.endDate.toISOString() : null,
+    rag: p.rag,
+    progress: p.progress,
+    portfolioCategory: p.portfolioCategory,
+    theme: p.theme,
+    businessUnit: p.businessUnit,
+    program: p.programId ? programMap.get(p.programId) || null : null,
+    priority: p.priority,
+    governanceChannel: p.governanceChannel,
+  }));
+
+  const dated = projectRows.filter((p) => p.startDate && p.endDate);
+  const ragCounts = { Green: 0, Amber: 0, Red: 0 };
+  for (const p of projects) {
+    if (p.rag === "Green") ragCounts.Green++;
+    else if (p.rag === "Amber") ragCounts.Amber++;
+    else ragCounts.Red++;
+  }
 
   return (
     <div>
       <PageHeader
         title="Portfolio Timeline"
-        description="Planned project timelines with progress — Streamlit Timeline parity."
+        description="Interactive Gantt with group-by selector — Streamlit Timeline parity."
       />
+
+      <div className="mb-6 grid gap-4 md:grid-cols-4">
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">Total projects</p>
+          <p className="kpi-value mt-2 text-3xl">{projects.length}</p>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">With dates</p>
+          <p className="kpi-value mt-2 text-3xl">{dated.length}</p>
+        </Card>
+        <Card>
+          <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">RAG Green</p>
+          <p className="kpi-value mt-2 text-3xl text-emerald-700">{ragCounts.Green}</p>
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">At risk</p>
+              <p className="kpi-value mt-2 text-3xl text-amber-600">{ragCounts.Amber}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs uppercase tracking-wide text-[var(--ink-soft)]">Red</p>
+              <p className="mt-2 text-3xl font-semibold text-rose-700">{ragCounts.Red}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
       <Card>
-        <div className="space-y-4">
-          {dated.map((p) => {
-            const start = new Date(p.startDate!).getTime();
-            const end = new Date(p.endDate!).getTime();
-            const left = ((start - min) / span) * 100;
-            const width = Math.max(2, ((end - start) / span) * 100);
-            return (
-              <div key={p.id}>
-                <div className="mb-1 flex items-center justify-between gap-3 text-sm">
-                  <div className="min-w-0">
-                    <span className="font-semibold">{p.code}</span>{" "}
-                    <span className="text-[var(--ink-soft)]">{p.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge tone={p.rag === "Green" ? "green" : p.rag === "Amber" ? "amber" : "red"}>
-                      {p.rag}
-                    </Badge>
-                    <span className="text-xs text-[var(--ink-soft)]">{formatPct(p.progress)}</span>
-                  </div>
-                </div>
-                <div className="relative h-8 rounded-lg bg-black/[0.04]">
-                  <div
-                    className="absolute top-1 h-6 rounded-md"
-                    style={{
-                      left: `${left}%`,
-                      width: `${width}%`,
-                      background:
-                        p.rag === "Red" ? "#e11d48" : p.rag === "Amber" ? "#d97706" : "#0f766e",
-                      opacity: 0.85,
-                    }}
-                    title={`${p.startDate?.toDateString()} → ${p.endDate?.toDateString()}`}
-                  />
-                </div>
-              </div>
-            );
-          })}
-          {!dated.length ? (
-            <p className="text-sm text-[var(--ink-soft)]">
-              No projects with start/end dates. Import Excel or seed sample data.
-            </p>
-          ) : null}
+        <TimelineClient projects={projectRows} />
+      </Card>
+
+      <Card className="mt-6">
+        <h3 className="font-[family-name:var(--font-display)] text-xl">Projects without dates</h3>
+        <div className="table-wrap mt-4">
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>RAG</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects
+                .filter((p) => !p.startDate || !p.endDate)
+                .map((p) => (
+                  <tr key={p.id}>
+                    <td className="font-medium">{p.code}</td>
+                    <td>{p.name}</td>
+                    <td>{p.portfolioCategory || "—"}</td>
+                    <td>
+                      <Badge
+                        tone={
+                          p.rag === "Green" ? "green" : p.rag === "Amber" ? "amber" : "red"
+                        }
+                      >
+                        {p.rag}
+                      </Badge>
+                    </td>
+                    <td>{p.progress}%</td>
+                  </tr>
+                ))}
+              {!projects.filter((p) => !p.startDate || !p.endDate).length && (
+                <tr>
+                  <td colSpan={5} className="text-[var(--ink-soft)]">
+                    All projects have start and end dates.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>

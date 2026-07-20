@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentContext } from "@/lib/auth";
+import { canEdit, getCurrentContext } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { filterByFy, fyTagOptions, parseFyFilter } from "@/lib/pmo/engines";
 import { formatCurrency } from "@/lib/utils";
+import { WaterfallChart, HeatmapChart } from "@/components/pmo/plotly-charts";
+import { FyAllocClient } from "@/components/pmo/fy-alloc-client";
 
 export default async function FyAllocationPage({
   searchParams,
@@ -13,13 +15,21 @@ export default async function FyAllocationPage({
 }) {
   const ctx = await getCurrentContext();
   if (!ctx) redirect("/login");
+
   const { fy } = await searchParams;
   const fyFilter = parseFyFilter(fy);
+  const orgId = ctx.organization.id;
 
-  const projects = await db.project.findMany({
-    where: { organizationId: ctx.organization.id },
-    orderBy: { name: "asc" },
-  });
+  const [projects, fyAllocs] = await Promise.all([
+    db.project.findMany({
+      where: { organizationId: orgId },
+      orderBy: { name: "asc" },
+    }),
+    db.fyAllocation.findMany({
+      where: { organizationId: orgId },
+      orderBy: [{ fy: "asc" }, { projectCode: "asc" }],
+    }),
+  ]);
 
   const fyOptions = fyTagOptions(projects.map((p) => p.financialYear));
   const rows = fyOptions.map((tag) => {
@@ -46,11 +56,27 @@ export default async function FyAllocationPage({
     forecast: projects.reduce((s, p) => s + p.forecast, 0),
   };
 
+  const waterfallLabels = ["Start", ...fyOptions, "Total"];
+  const waterfallValues = [
+    0,
+    ...rows.map((r) => r.budget),
+    rows.reduce((s, r) => s + r.budget, 0),
+  ];
+
+  const heatmapProjects = [...new Set(fyAllocs.map((a) => a.projectCode))];
+  const heatmapFYs = [...new Set(fyAllocs.map((a) => a.fy))].sort();
+  const heatmapZ = heatmapProjects.map((code) =>
+    heatmapFYs.map(
+      (fyTag) =>
+        fyAllocs.find((a) => a.projectCode === code && a.fy === fyTag)?.budgetAmount || 0
+    )
+  );
+
   return (
     <div>
       <PageHeader
         title="FY Allocation"
-        description="Budget, actual, and forecast by financial year — Streamlit FY Allocation portfolio view."
+        description="Budget waterfall, project×FY heatmap, and allocation editor — Streamlit FY Allocation parity."
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -66,6 +92,30 @@ export default async function FyAllocationPage({
           <p className="text-xs uppercase text-[var(--ink-soft)]">Forecast</p>
           <p className="kpi-value mt-2 text-2xl">{formatCurrency(totals.forecast)}</p>
         </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        <Card>
+          <h3 className="font-[family-name:var(--font-display)] text-xl">Budget by FY</h3>
+          <WaterfallChart
+            labels={waterfallLabels}
+            values={waterfallValues}
+            title="Portfolio budget by financial year"
+          />
+        </Card>
+
+        {heatmapZ.length > 0 ? (
+          <Card>
+            <h3 className="font-[family-name:var(--font-display)] text-xl">Project × FY budget matrix</h3>
+            <HeatmapChart
+              z={heatmapZ}
+              x={heatmapFYs}
+              y={heatmapProjects}
+              title="Budget amount ($)"
+              colorscale="Blues"
+            />
+          </Card>
+        ) : null}
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -97,6 +147,52 @@ export default async function FyAllocationPage({
           </Card>
         ))}
       </div>
+
+      <FyAllocClient
+        projects={projects.map((p) => ({ id: p.id, code: p.code, name: p.name }))}
+        canEdit={canEdit(ctx.membership.role)}
+      />
+
+      {fyAllocs.length > 0 && (
+        <Card className="mt-6">
+          <h3 className="font-[family-name:var(--font-display)] text-xl">Allocation register</h3>
+          <div className="table-wrap mt-4">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>FY</th>
+                  <th>Budget amount</th>
+                  <th>Forecast amount</th>
+                  <th>Budget %</th>
+                  <th>Forecast %</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fyAllocs.map((a) => (
+                  <tr key={a.id}>
+                    <td>
+                      <div className="font-medium">{a.projectCode}</div>
+                      {a.projectName && (
+                        <div className="text-xs text-[var(--ink-soft)]">{a.projectName}</div>
+                      )}
+                    </td>
+                    <td>
+                      <Badge tone="brand">{a.fy}</Badge>
+                    </td>
+                    <td>{formatCurrency(a.budgetAmount)}</td>
+                    <td>{formatCurrency(a.forecastAmount)}</td>
+                    <td>{a.budgetPct}%</td>
+                    <td>{a.forecastPct}%</td>
+                    <td className="text-xs">{a.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <Card className="mt-6">
         <h3 className="font-[family-name:var(--font-display)] text-xl">
