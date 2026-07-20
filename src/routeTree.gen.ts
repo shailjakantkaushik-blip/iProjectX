@@ -9,71 +9,71 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
-import { Route as AuthenticatedAppTimelineRouteImport } from './routes/_authenticated/app.timeline'
-import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
-import { Route as AuthenticatedAppStageGatesRouteImport } from './routes/_authenticated/app.stage-gates'
-import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
-import { Route as AuthenticatedAppRoadmapGovernanceRouteImport } from './routes/_authenticated/app.roadmap-governance'
-import { Route as AuthenticatedAppRoadmapAnalyticsRouteImport } from './routes/_authenticated/app.roadmap-analytics'
-import { Route as AuthenticatedAppRisksRouteImport } from './routes/_authenticated/app.risks'
-import { Route as AuthenticatedAppResourcesRouteImport } from './routes/_authenticated/app.resources'
-import { Route as AuthenticatedAppReleaseRegisterRouteImport } from './routes/_authenticated/app.release-register'
-import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
-import { Route as AuthenticatedAppProjectInfographicRouteImport } from './routes/_authenticated/app.project-infographic'
-import { Route as AuthenticatedAppProgramsRouteImport } from './routes/_authenticated/app.programs'
-import { Route as AuthenticatedAppPrioritisationRouteImport } from './routes/_authenticated/app.prioritisation'
-import { Route as AuthenticatedAppPortfolioSegmentationRouteImport } from './routes/_authenticated/app.portfolio-segmentation'
-import { Route as AuthenticatedAppPortfolioMovementsRouteImport } from './routes/_authenticated/app.portfolio-movements'
-import { Route as AuthenticatedAppPhaseFinancialsRouteImport } from './routes/_authenticated/app.phase-financials'
-import { Route as AuthenticatedAppLatestUpdatesRouteImport } from './routes/_authenticated/app.latest-updates'
-import { Route as AuthenticatedAppGovernanceChannelsRouteImport } from './routes/_authenticated/app.governance-channels'
-import { Route as AuthenticatedAppFyAllocationRouteImport } from './routes/_authenticated/app.fy-allocation'
-import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
-import { Route as AuthenticatedAppExecutiveReportsRouteImport } from './routes/_authenticated/app.executive-reports'
-import { Route as AuthenticatedAppExecutiveRouteImport } from './routes/_authenticated/app.executive'
-import { Route as AuthenticatedAppDependenciesRouteImport } from './routes/_authenticated/app.dependencies'
-import { Route as AuthenticatedAppDemandPipelineRouteImport } from './routes/_authenticated/app.demand-pipeline'
-import { Route as AuthenticatedAppDecisionsRouteImport } from './routes/_authenticated/app.decisions'
-import { Route as AuthenticatedAppDataEditorRouteImport } from './routes/_authenticated/app.data-editor'
-import { Route as AuthenticatedAppCostVsBenefitRouteImport } from './routes/_authenticated/app.cost-vs-benefit'
-import { Route as AuthenticatedAppConfigurationRouteImport } from './routes/_authenticated/app.configuration'
-import { Route as AuthenticatedAppBusinessUnitsRouteImport } from './routes/_authenticated/app.business-units'
-import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
-import { Route as AuthenticatedAppBenefitsRouteImport } from './routes/_authenticated/app.benefits'
-import { Route as AuthenticatedAppAgileRouteImport } from './routes/_authenticated/app.agile'
-import { Route as AuthenticatedAppActionsRouteImport } from './routes/_authenticated/app.actions'
 import { Route as AuthenticatedAppAboutRouteImport } from './routes/_authenticated/app.about'
-import { Route as AuthenticatedAppProjectsNewRouteImport } from './routes/_authenticated/app.projects.new'
+import { Route as AuthenticatedAppActionsRouteImport } from './routes/_authenticated/app.actions'
+import { Route as AuthenticatedAppAgileRouteImport } from './routes/_authenticated/app.agile'
+import { Route as AuthenticatedAppBenefitsRouteImport } from './routes/_authenticated/app.benefits'
+import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
+import { Route as AuthenticatedAppBusinessUnitsRouteImport } from './routes/_authenticated/app.business-units'
+import { Route as AuthenticatedAppConfigurationRouteImport } from './routes/_authenticated/app.configuration'
+import { Route as AuthenticatedAppCostVsBenefitRouteImport } from './routes/_authenticated/app.cost-vs-benefit'
+import { Route as AuthenticatedAppDataEditorRouteImport } from './routes/_authenticated/app.data-editor'
+import { Route as AuthenticatedAppDecisionsRouteImport } from './routes/_authenticated/app.decisions'
+import { Route as AuthenticatedAppDemandPipelineRouteImport } from './routes/_authenticated/app.demand-pipeline'
+import { Route as AuthenticatedAppDependenciesRouteImport } from './routes/_authenticated/app.dependencies'
+import { Route as AuthenticatedAppExecutiveRouteImport } from './routes/_authenticated/app.executive'
+import { Route as AuthenticatedAppExecutiveReportsRouteImport } from './routes/_authenticated/app.executive-reports'
+import { Route as AuthenticatedAppFinancialsRouteImport } from './routes/_authenticated/app.financials'
+import { Route as AuthenticatedAppFyAllocationRouteImport } from './routes/_authenticated/app.fy-allocation'
+import { Route as AuthenticatedAppGovernanceChannelsRouteImport } from './routes/_authenticated/app.governance-channels'
+import { Route as AuthenticatedAppLatestUpdatesRouteImport } from './routes/_authenticated/app.latest-updates'
+import { Route as AuthenticatedAppPhaseFinancialsRouteImport } from './routes/_authenticated/app.phase-financials'
+import { Route as AuthenticatedAppPortfolioMovementsRouteImport } from './routes/_authenticated/app.portfolio-movements'
+import { Route as AuthenticatedAppPortfolioSegmentationRouteImport } from './routes/_authenticated/app.portfolio-segmentation'
+import { Route as AuthenticatedAppPrioritisationRouteImport } from './routes/_authenticated/app.prioritisation'
+import { Route as AuthenticatedAppProgramsRouteImport } from './routes/_authenticated/app.programs'
+import { Route as AuthenticatedAppProjectInfographicRouteImport } from './routes/_authenticated/app.project-infographic'
+import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
+import { Route as AuthenticatedAppReleaseRegisterRouteImport } from './routes/_authenticated/app.release-register'
+import { Route as AuthenticatedAppResourcesRouteImport } from './routes/_authenticated/app.resources'
+import { Route as AuthenticatedAppRisksRouteImport } from './routes/_authenticated/app.risks'
+import { Route as AuthenticatedAppRoadmapAnalyticsRouteImport } from './routes/_authenticated/app.roadmap-analytics'
+import { Route as AuthenticatedAppRoadmapGovernanceRouteImport } from './routes/_authenticated/app.roadmap-governance'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
+import { Route as AuthenticatedAppStageGatesRouteImport } from './routes/_authenticated/app.stage-gates'
+import { Route as AuthenticatedAppTeamRouteImport } from './routes/_authenticated/app.team'
+import { Route as AuthenticatedAppTimelineRouteImport } from './routes/_authenticated/app.timeline'
 import { Route as AuthenticatedAppProjectsIdRouteImport } from './routes/_authenticated/app.projects.$id'
+import { Route as AuthenticatedAppProjectsNewRouteImport } from './routes/_authenticated/app.projects.new'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
@@ -81,181 +81,19 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppTimelineRoute =
-  AuthenticatedAppTimelineRouteImport.update({
-    id: '/timeline',
-    path: '/timeline',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
+const AuthenticatedAppAboutRoute = AuthenticatedAppAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppStageGatesRoute =
-  AuthenticatedAppStageGatesRouteImport.update({
-    id: '/stage-gates',
-    path: '/stage-gates',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppSettingsRoute =
-  AuthenticatedAppSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppRoadmapGovernanceRoute =
-  AuthenticatedAppRoadmapGovernanceRouteImport.update({
-    id: '/roadmap-governance',
-    path: '/roadmap-governance',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppRoadmapAnalyticsRoute =
-  AuthenticatedAppRoadmapAnalyticsRouteImport.update({
-    id: '/roadmap-analytics',
-    path: '/roadmap-analytics',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppRisksRoute = AuthenticatedAppRisksRouteImport.update({
-  id: '/risks',
-  path: '/risks',
+const AuthenticatedAppActionsRoute = AuthenticatedAppActionsRouteImport.update({
+  id: '/actions',
+  path: '/actions',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppResourcesRoute =
-  AuthenticatedAppResourcesRouteImport.update({
-    id: '/resources',
-    path: '/resources',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppReleaseRegisterRoute =
-  AuthenticatedAppReleaseRegisterRouteImport.update({
-    id: '/release-register',
-    path: '/release-register',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppProjectsRoute =
-  AuthenticatedAppProjectsRouteImport.update({
-    id: '/projects',
-    path: '/projects',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppProjectInfographicRoute =
-  AuthenticatedAppProjectInfographicRouteImport.update({
-    id: '/project-infographic',
-    path: '/project-infographic',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppProgramsRoute =
-  AuthenticatedAppProgramsRouteImport.update({
-    id: '/programs',
-    path: '/programs',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppPrioritisationRoute =
-  AuthenticatedAppPrioritisationRouteImport.update({
-    id: '/prioritisation',
-    path: '/prioritisation',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppPortfolioSegmentationRoute =
-  AuthenticatedAppPortfolioSegmentationRouteImport.update({
-    id: '/portfolio-segmentation',
-    path: '/portfolio-segmentation',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppPortfolioMovementsRoute =
-  AuthenticatedAppPortfolioMovementsRouteImport.update({
-    id: '/portfolio-movements',
-    path: '/portfolio-movements',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppPhaseFinancialsRoute =
-  AuthenticatedAppPhaseFinancialsRouteImport.update({
-    id: '/phase-financials',
-    path: '/phase-financials',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppLatestUpdatesRoute =
-  AuthenticatedAppLatestUpdatesRouteImport.update({
-    id: '/latest-updates',
-    path: '/latest-updates',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppGovernanceChannelsRoute =
-  AuthenticatedAppGovernanceChannelsRouteImport.update({
-    id: '/governance-channels',
-    path: '/governance-channels',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppFyAllocationRoute =
-  AuthenticatedAppFyAllocationRouteImport.update({
-    id: '/fy-allocation',
-    path: '/fy-allocation',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppFinancialsRoute =
-  AuthenticatedAppFinancialsRouteImport.update({
-    id: '/financials',
-    path: '/financials',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppExecutiveReportsRoute =
-  AuthenticatedAppExecutiveReportsRouteImport.update({
-    id: '/executive-reports',
-    path: '/executive-reports',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppExecutiveRoute =
-  AuthenticatedAppExecutiveRouteImport.update({
-    id: '/executive',
-    path: '/executive',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppDependenciesRoute =
-  AuthenticatedAppDependenciesRouteImport.update({
-    id: '/dependencies',
-    path: '/dependencies',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppDemandPipelineRoute =
-  AuthenticatedAppDemandPipelineRouteImport.update({
-    id: '/demand-pipeline',
-    path: '/demand-pipeline',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppDecisionsRoute =
-  AuthenticatedAppDecisionsRouteImport.update({
-    id: '/decisions',
-    path: '/decisions',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppDataEditorRoute =
-  AuthenticatedAppDataEditorRouteImport.update({
-    id: '/data-editor',
-    path: '/data-editor',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppCostVsBenefitRoute =
-  AuthenticatedAppCostVsBenefitRouteImport.update({
-    id: '/cost-vs-benefit',
-    path: '/cost-vs-benefit',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppConfigurationRoute =
-  AuthenticatedAppConfigurationRouteImport.update({
-    id: '/configuration',
-    path: '/configuration',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppBusinessUnitsRoute =
-  AuthenticatedAppBusinessUnitsRouteImport.update({
-    id: '/business-units',
-    path: '/business-units',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
+const AuthenticatedAppAgileRoute = AuthenticatedAppAgileRouteImport.update({
+  id: '/agile',
+  path: '/agile',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppBenefitsRoute =
@@ -264,31 +102,193 @@ const AuthenticatedAppBenefitsRoute =
     path: '/benefits',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppAgileRoute = AuthenticatedAppAgileRouteImport.update({
-  id: '/agile',
-  path: '/agile',
+const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppActionsRoute = AuthenticatedAppActionsRouteImport.update({
-  id: '/actions',
-  path: '/actions',
+const AuthenticatedAppBusinessUnitsRoute =
+  AuthenticatedAppBusinessUnitsRouteImport.update({
+    id: '/business-units',
+    path: '/business-units',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppConfigurationRoute =
+  AuthenticatedAppConfigurationRouteImport.update({
+    id: '/configuration',
+    path: '/configuration',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCostVsBenefitRoute =
+  AuthenticatedAppCostVsBenefitRouteImport.update({
+    id: '/cost-vs-benefit',
+    path: '/cost-vs-benefit',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDataEditorRoute =
+  AuthenticatedAppDataEditorRouteImport.update({
+    id: '/data-editor',
+    path: '/data-editor',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDecisionsRoute =
+  AuthenticatedAppDecisionsRouteImport.update({
+    id: '/decisions',
+    path: '/decisions',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDemandPipelineRoute =
+  AuthenticatedAppDemandPipelineRouteImport.update({
+    id: '/demand-pipeline',
+    path: '/demand-pipeline',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDependenciesRoute =
+  AuthenticatedAppDependenciesRouteImport.update({
+    id: '/dependencies',
+    path: '/dependencies',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppExecutiveRoute =
+  AuthenticatedAppExecutiveRouteImport.update({
+    id: '/executive',
+    path: '/executive',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppExecutiveReportsRoute =
+  AuthenticatedAppExecutiveReportsRouteImport.update({
+    id: '/executive-reports',
+    path: '/executive-reports',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppFinancialsRoute =
+  AuthenticatedAppFinancialsRouteImport.update({
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppFyAllocationRoute =
+  AuthenticatedAppFyAllocationRouteImport.update({
+    id: '/fy-allocation',
+    path: '/fy-allocation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppGovernanceChannelsRoute =
+  AuthenticatedAppGovernanceChannelsRouteImport.update({
+    id: '/governance-channels',
+    path: '/governance-channels',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppLatestUpdatesRoute =
+  AuthenticatedAppLatestUpdatesRouteImport.update({
+    id: '/latest-updates',
+    path: '/latest-updates',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppPhaseFinancialsRoute =
+  AuthenticatedAppPhaseFinancialsRouteImport.update({
+    id: '/phase-financials',
+    path: '/phase-financials',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppPortfolioMovementsRoute =
+  AuthenticatedAppPortfolioMovementsRouteImport.update({
+    id: '/portfolio-movements',
+    path: '/portfolio-movements',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppPortfolioSegmentationRoute =
+  AuthenticatedAppPortfolioSegmentationRouteImport.update({
+    id: '/portfolio-segmentation',
+    path: '/portfolio-segmentation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppPrioritisationRoute =
+  AuthenticatedAppPrioritisationRouteImport.update({
+    id: '/prioritisation',
+    path: '/prioritisation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProgramsRoute =
+  AuthenticatedAppProgramsRouteImport.update({
+    id: '/programs',
+    path: '/programs',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProjectInfographicRoute =
+  AuthenticatedAppProjectInfographicRouteImport.update({
+    id: '/project-infographic',
+    path: '/project-infographic',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProjectsRoute =
+  AuthenticatedAppProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReleaseRegisterRoute =
+  AuthenticatedAppReleaseRegisterRouteImport.update({
+    id: '/release-register',
+    path: '/release-register',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppResourcesRoute =
+  AuthenticatedAppResourcesRouteImport.update({
+    id: '/resources',
+    path: '/resources',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppRisksRoute = AuthenticatedAppRisksRouteImport.update({
+  id: '/risks',
+  path: '/risks',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppAboutRoute = AuthenticatedAppAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const AuthenticatedAppRoadmapAnalyticsRoute =
+  AuthenticatedAppRoadmapAnalyticsRouteImport.update({
+    id: '/roadmap-analytics',
+    path: '/roadmap-analytics',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppRoadmapGovernanceRoute =
+  AuthenticatedAppRoadmapGovernanceRouteImport.update({
+    id: '/roadmap-governance',
+    path: '/roadmap-governance',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppStageGatesRoute =
+  AuthenticatedAppStageGatesRouteImport.update({
+    id: '/stage-gates',
+    path: '/stage-gates',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppTeamRoute = AuthenticatedAppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppProjectsNewRoute =
-  AuthenticatedAppProjectsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedAppProjectsRoute,
+const AuthenticatedAppTimelineRoute =
+  AuthenticatedAppTimelineRouteImport.update({
+    id: '/timeline',
+    path: '/timeline',
+    getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppProjectsIdRoute =
   AuthenticatedAppProjectsIdRouteImport.update({
     id: '/$id',
     path: '/$id',
+    getParentRoute: () => AuthenticatedAppProjectsRoute,
+  } as any)
+const AuthenticatedAppProjectsNewRoute =
+  AuthenticatedAppProjectsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
     getParentRoute: () => AuthenticatedAppProjectsRoute,
   } as any)
 
@@ -562,11 +562,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -576,25 +576,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/onboarding': {
-      id: '/_authenticated/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app/': {
@@ -604,228 +604,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/timeline': {
-      id: '/_authenticated/app/timeline'
-      path: '/timeline'
-      fullPath: '/app/timeline'
-      preLoaderRoute: typeof AuthenticatedAppTimelineRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/team': {
-      id: '/_authenticated/app/team'
-      path: '/team'
-      fullPath: '/app/team'
-      preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/stage-gates': {
-      id: '/_authenticated/app/stage-gates'
-      path: '/stage-gates'
-      fullPath: '/app/stage-gates'
-      preLoaderRoute: typeof AuthenticatedAppStageGatesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/settings': {
-      id: '/_authenticated/app/settings'
-      path: '/settings'
-      fullPath: '/app/settings'
-      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/roadmap-governance': {
-      id: '/_authenticated/app/roadmap-governance'
-      path: '/roadmap-governance'
-      fullPath: '/app/roadmap-governance'
-      preLoaderRoute: typeof AuthenticatedAppRoadmapGovernanceRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/roadmap-analytics': {
-      id: '/_authenticated/app/roadmap-analytics'
-      path: '/roadmap-analytics'
-      fullPath: '/app/roadmap-analytics'
-      preLoaderRoute: typeof AuthenticatedAppRoadmapAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/risks': {
-      id: '/_authenticated/app/risks'
-      path: '/risks'
-      fullPath: '/app/risks'
-      preLoaderRoute: typeof AuthenticatedAppRisksRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/resources': {
-      id: '/_authenticated/app/resources'
-      path: '/resources'
-      fullPath: '/app/resources'
-      preLoaderRoute: typeof AuthenticatedAppResourcesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/release-register': {
-      id: '/_authenticated/app/release-register'
-      path: '/release-register'
-      fullPath: '/app/release-register'
-      preLoaderRoute: typeof AuthenticatedAppReleaseRegisterRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/projects': {
-      id: '/_authenticated/app/projects'
-      path: '/projects'
-      fullPath: '/app/projects'
-      preLoaderRoute: typeof AuthenticatedAppProjectsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/project-infographic': {
-      id: '/_authenticated/app/project-infographic'
-      path: '/project-infographic'
-      fullPath: '/app/project-infographic'
-      preLoaderRoute: typeof AuthenticatedAppProjectInfographicRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/programs': {
-      id: '/_authenticated/app/programs'
-      path: '/programs'
-      fullPath: '/app/programs'
-      preLoaderRoute: typeof AuthenticatedAppProgramsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/prioritisation': {
-      id: '/_authenticated/app/prioritisation'
-      path: '/prioritisation'
-      fullPath: '/app/prioritisation'
-      preLoaderRoute: typeof AuthenticatedAppPrioritisationRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/portfolio-segmentation': {
-      id: '/_authenticated/app/portfolio-segmentation'
-      path: '/portfolio-segmentation'
-      fullPath: '/app/portfolio-segmentation'
-      preLoaderRoute: typeof AuthenticatedAppPortfolioSegmentationRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/portfolio-movements': {
-      id: '/_authenticated/app/portfolio-movements'
-      path: '/portfolio-movements'
-      fullPath: '/app/portfolio-movements'
-      preLoaderRoute: typeof AuthenticatedAppPortfolioMovementsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/phase-financials': {
-      id: '/_authenticated/app/phase-financials'
-      path: '/phase-financials'
-      fullPath: '/app/phase-financials'
-      preLoaderRoute: typeof AuthenticatedAppPhaseFinancialsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/latest-updates': {
-      id: '/_authenticated/app/latest-updates'
-      path: '/latest-updates'
-      fullPath: '/app/latest-updates'
-      preLoaderRoute: typeof AuthenticatedAppLatestUpdatesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/governance-channels': {
-      id: '/_authenticated/app/governance-channels'
-      path: '/governance-channels'
-      fullPath: '/app/governance-channels'
-      preLoaderRoute: typeof AuthenticatedAppGovernanceChannelsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/fy-allocation': {
-      id: '/_authenticated/app/fy-allocation'
-      path: '/fy-allocation'
-      fullPath: '/app/fy-allocation'
-      preLoaderRoute: typeof AuthenticatedAppFyAllocationRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/financials': {
-      id: '/_authenticated/app/financials'
-      path: '/financials'
-      fullPath: '/app/financials'
-      preLoaderRoute: typeof AuthenticatedAppFinancialsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/executive-reports': {
-      id: '/_authenticated/app/executive-reports'
-      path: '/executive-reports'
-      fullPath: '/app/executive-reports'
-      preLoaderRoute: typeof AuthenticatedAppExecutiveReportsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/executive': {
-      id: '/_authenticated/app/executive'
-      path: '/executive'
-      fullPath: '/app/executive'
-      preLoaderRoute: typeof AuthenticatedAppExecutiveRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/dependencies': {
-      id: '/_authenticated/app/dependencies'
-      path: '/dependencies'
-      fullPath: '/app/dependencies'
-      preLoaderRoute: typeof AuthenticatedAppDependenciesRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/demand-pipeline': {
-      id: '/_authenticated/app/demand-pipeline'
-      path: '/demand-pipeline'
-      fullPath: '/app/demand-pipeline'
-      preLoaderRoute: typeof AuthenticatedAppDemandPipelineRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/decisions': {
-      id: '/_authenticated/app/decisions'
-      path: '/decisions'
-      fullPath: '/app/decisions'
-      preLoaderRoute: typeof AuthenticatedAppDecisionsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/data-editor': {
-      id: '/_authenticated/app/data-editor'
-      path: '/data-editor'
-      fullPath: '/app/data-editor'
-      preLoaderRoute: typeof AuthenticatedAppDataEditorRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/cost-vs-benefit': {
-      id: '/_authenticated/app/cost-vs-benefit'
-      path: '/cost-vs-benefit'
-      fullPath: '/app/cost-vs-benefit'
-      preLoaderRoute: typeof AuthenticatedAppCostVsBenefitRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/configuration': {
-      id: '/_authenticated/app/configuration'
-      path: '/configuration'
-      fullPath: '/app/configuration'
-      preLoaderRoute: typeof AuthenticatedAppConfigurationRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/business-units': {
-      id: '/_authenticated/app/business-units'
-      path: '/business-units'
-      fullPath: '/app/business-units'
-      preLoaderRoute: typeof AuthenticatedAppBusinessUnitsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/billing': {
-      id: '/_authenticated/app/billing'
-      path: '/billing'
-      fullPath: '/app/billing'
-      preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/benefits': {
-      id: '/_authenticated/app/benefits'
-      path: '/benefits'
-      fullPath: '/app/benefits'
-      preLoaderRoute: typeof AuthenticatedAppBenefitsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/agile': {
-      id: '/_authenticated/app/agile'
-      path: '/agile'
-      fullPath: '/app/agile'
-      preLoaderRoute: typeof AuthenticatedAppAgileRouteImport
+    '/_authenticated/app/about': {
+      id: '/_authenticated/app/about'
+      path: '/about'
+      fullPath: '/app/about'
+      preLoaderRoute: typeof AuthenticatedAppAboutRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/actions': {
@@ -835,25 +618,242 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppActionsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/about': {
-      id: '/_authenticated/app/about'
-      path: '/about'
-      fullPath: '/app/about'
-      preLoaderRoute: typeof AuthenticatedAppAboutRouteImport
+    '/_authenticated/app/agile': {
+      id: '/_authenticated/app/agile'
+      path: '/agile'
+      fullPath: '/app/agile'
+      preLoaderRoute: typeof AuthenticatedAppAgileRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/projects/new': {
-      id: '/_authenticated/app/projects/new'
-      path: '/new'
-      fullPath: '/app/projects/new'
-      preLoaderRoute: typeof AuthenticatedAppProjectsNewRouteImport
-      parentRoute: typeof AuthenticatedAppProjectsRoute
+    '/_authenticated/app/benefits': {
+      id: '/_authenticated/app/benefits'
+      path: '/benefits'
+      fullPath: '/app/benefits'
+      preLoaderRoute: typeof AuthenticatedAppBenefitsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/billing': {
+      id: '/_authenticated/app/billing'
+      path: '/billing'
+      fullPath: '/app/billing'
+      preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/business-units': {
+      id: '/_authenticated/app/business-units'
+      path: '/business-units'
+      fullPath: '/app/business-units'
+      preLoaderRoute: typeof AuthenticatedAppBusinessUnitsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/configuration': {
+      id: '/_authenticated/app/configuration'
+      path: '/configuration'
+      fullPath: '/app/configuration'
+      preLoaderRoute: typeof AuthenticatedAppConfigurationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/cost-vs-benefit': {
+      id: '/_authenticated/app/cost-vs-benefit'
+      path: '/cost-vs-benefit'
+      fullPath: '/app/cost-vs-benefit'
+      preLoaderRoute: typeof AuthenticatedAppCostVsBenefitRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/data-editor': {
+      id: '/_authenticated/app/data-editor'
+      path: '/data-editor'
+      fullPath: '/app/data-editor'
+      preLoaderRoute: typeof AuthenticatedAppDataEditorRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/decisions': {
+      id: '/_authenticated/app/decisions'
+      path: '/decisions'
+      fullPath: '/app/decisions'
+      preLoaderRoute: typeof AuthenticatedAppDecisionsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/demand-pipeline': {
+      id: '/_authenticated/app/demand-pipeline'
+      path: '/demand-pipeline'
+      fullPath: '/app/demand-pipeline'
+      preLoaderRoute: typeof AuthenticatedAppDemandPipelineRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/dependencies': {
+      id: '/_authenticated/app/dependencies'
+      path: '/dependencies'
+      fullPath: '/app/dependencies'
+      preLoaderRoute: typeof AuthenticatedAppDependenciesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/executive': {
+      id: '/_authenticated/app/executive'
+      path: '/executive'
+      fullPath: '/app/executive'
+      preLoaderRoute: typeof AuthenticatedAppExecutiveRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/executive-reports': {
+      id: '/_authenticated/app/executive-reports'
+      path: '/executive-reports'
+      fullPath: '/app/executive-reports'
+      preLoaderRoute: typeof AuthenticatedAppExecutiveReportsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/financials': {
+      id: '/_authenticated/app/financials'
+      path: '/financials'
+      fullPath: '/app/financials'
+      preLoaderRoute: typeof AuthenticatedAppFinancialsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/fy-allocation': {
+      id: '/_authenticated/app/fy-allocation'
+      path: '/fy-allocation'
+      fullPath: '/app/fy-allocation'
+      preLoaderRoute: typeof AuthenticatedAppFyAllocationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/governance-channels': {
+      id: '/_authenticated/app/governance-channels'
+      path: '/governance-channels'
+      fullPath: '/app/governance-channels'
+      preLoaderRoute: typeof AuthenticatedAppGovernanceChannelsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/latest-updates': {
+      id: '/_authenticated/app/latest-updates'
+      path: '/latest-updates'
+      fullPath: '/app/latest-updates'
+      preLoaderRoute: typeof AuthenticatedAppLatestUpdatesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/phase-financials': {
+      id: '/_authenticated/app/phase-financials'
+      path: '/phase-financials'
+      fullPath: '/app/phase-financials'
+      preLoaderRoute: typeof AuthenticatedAppPhaseFinancialsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/portfolio-movements': {
+      id: '/_authenticated/app/portfolio-movements'
+      path: '/portfolio-movements'
+      fullPath: '/app/portfolio-movements'
+      preLoaderRoute: typeof AuthenticatedAppPortfolioMovementsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/portfolio-segmentation': {
+      id: '/_authenticated/app/portfolio-segmentation'
+      path: '/portfolio-segmentation'
+      fullPath: '/app/portfolio-segmentation'
+      preLoaderRoute: typeof AuthenticatedAppPortfolioSegmentationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/prioritisation': {
+      id: '/_authenticated/app/prioritisation'
+      path: '/prioritisation'
+      fullPath: '/app/prioritisation'
+      preLoaderRoute: typeof AuthenticatedAppPrioritisationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/programs': {
+      id: '/_authenticated/app/programs'
+      path: '/programs'
+      fullPath: '/app/programs'
+      preLoaderRoute: typeof AuthenticatedAppProgramsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/project-infographic': {
+      id: '/_authenticated/app/project-infographic'
+      path: '/project-infographic'
+      fullPath: '/app/project-infographic'
+      preLoaderRoute: typeof AuthenticatedAppProjectInfographicRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/projects': {
+      id: '/_authenticated/app/projects'
+      path: '/projects'
+      fullPath: '/app/projects'
+      preLoaderRoute: typeof AuthenticatedAppProjectsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/release-register': {
+      id: '/_authenticated/app/release-register'
+      path: '/release-register'
+      fullPath: '/app/release-register'
+      preLoaderRoute: typeof AuthenticatedAppReleaseRegisterRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/resources': {
+      id: '/_authenticated/app/resources'
+      path: '/resources'
+      fullPath: '/app/resources'
+      preLoaderRoute: typeof AuthenticatedAppResourcesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/risks': {
+      id: '/_authenticated/app/risks'
+      path: '/risks'
+      fullPath: '/app/risks'
+      preLoaderRoute: typeof AuthenticatedAppRisksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/roadmap-analytics': {
+      id: '/_authenticated/app/roadmap-analytics'
+      path: '/roadmap-analytics'
+      fullPath: '/app/roadmap-analytics'
+      preLoaderRoute: typeof AuthenticatedAppRoadmapAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/roadmap-governance': {
+      id: '/_authenticated/app/roadmap-governance'
+      path: '/roadmap-governance'
+      fullPath: '/app/roadmap-governance'
+      preLoaderRoute: typeof AuthenticatedAppRoadmapGovernanceRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/settings': {
+      id: '/_authenticated/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/stage-gates': {
+      id: '/_authenticated/app/stage-gates'
+      path: '/stage-gates'
+      fullPath: '/app/stage-gates'
+      preLoaderRoute: typeof AuthenticatedAppStageGatesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/team': {
+      id: '/_authenticated/app/team'
+      path: '/team'
+      fullPath: '/app/team'
+      preLoaderRoute: typeof AuthenticatedAppTeamRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/timeline': {
+      id: '/_authenticated/app/timeline'
+      path: '/timeline'
+      fullPath: '/app/timeline'
+      preLoaderRoute: typeof AuthenticatedAppTimelineRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/projects/$id': {
       id: '/_authenticated/app/projects/$id'
       path: '/$id'
       fullPath: '/app/projects/$id'
       preLoaderRoute: typeof AuthenticatedAppProjectsIdRouteImport
+      parentRoute: typeof AuthenticatedAppProjectsRoute
+    }
+    '/_authenticated/app/projects/new': {
+      id: '/_authenticated/app/projects/new'
+      path: '/new'
+      fullPath: '/app/projects/new'
+      preLoaderRoute: typeof AuthenticatedAppProjectsNewRouteImport
       parentRoute: typeof AuthenticatedAppProjectsRoute
     }
   }
@@ -980,3 +980,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
