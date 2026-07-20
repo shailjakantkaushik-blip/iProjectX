@@ -9,6 +9,7 @@ import {
   Boxes,
   CalendarRange,
   CircleDollarSign,
+  Database,
   FolderKanban,
   Gauge,
   GitBranch,
@@ -16,14 +17,15 @@ import {
   LogOut,
   Palette,
   Settings2,
+  Shield,
   ShieldAlert,
   Sparkles,
   Users,
   Workflow,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
-const NAV = [
+const BASE_NAV = [
   { href: "/app", label: "Executive Cockpit", icon: LayoutDashboard },
   { href: "/app/projects", label: "Projects", icon: FolderKanban },
   { href: "/app/programs", label: "Programs", icon: Boxes },
@@ -34,6 +36,7 @@ const NAV = [
   { href: "/app/resources", label: "Resources", icon: Users },
   { href: "/app/agile", label: "Agile & Releases", icon: CalendarRange },
   { href: "/app/governance", label: "Governance", icon: Activity },
+  { href: "/app/data", label: "Data & Exports", icon: Database },
   { href: "/app/settings", label: "Workspace Settings", icon: Settings2 },
 ];
 
@@ -43,13 +46,22 @@ export function AppShell({
   userName,
   role,
   planName,
+  isPlatformAdmin = false,
 }: {
   children: ReactNode;
   brand: BrandTheme;
   userName: string;
   role: string;
   planName: string;
+  isPlatformAdmin?: boolean;
 }) {
+  const NAV = useMemo(
+    () =>
+      isPlatformAdmin
+        ? [...BASE_NAV, { href: "/app/admin", label: "Platform Admin", icon: Shield }]
+        : BASE_NAV,
+    [isPlatformAdmin]
+  );
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);

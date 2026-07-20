@@ -2,10 +2,25 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { PLAN_CATALOG } from "../src/lib/plans";
 import { scorePipeline } from "../src/lib/utils";
+import { DEFAULT_FEATURE_CARDS } from "../src/lib/site-config";
 
 const db = new PrismaClient();
 
 async function main() {
+  await db.siteConfig.upsert({
+    where: { id: "default" },
+    update: {
+      featureCardsJson: JSON.stringify(DEFAULT_FEATURE_CARDS),
+      enableExcelImport: true,
+      enablePptExport: true,
+      enablePdfExport: true,
+    },
+    create: {
+      id: "default",
+      featureCardsJson: JSON.stringify(DEFAULT_FEATURE_CARDS),
+    },
+  });
+
   for (const plan of PLAN_CATALOG) {
     await db.plan.upsert({
       where: { slug: plan.slug },
@@ -40,21 +55,23 @@ async function main() {
 
   const user = await db.user.upsert({
     where: { email: "demo@iprojectx.com" },
-    update: { passwordHash, name: "Alex Morgan" },
+    update: { passwordHash, name: "Alex Morgan", isPlatformAdmin: true },
     create: {
       email: "demo@iprojectx.com",
       name: "Alex Morgan",
       passwordHash,
+      isPlatformAdmin: true,
     },
   });
 
   const exec = await db.user.upsert({
     where: { email: "exec@iprojectx.com" },
-    update: { passwordHash, name: "Jordan Lee" },
+    update: { passwordHash, name: "Jordan Lee", isPlatformAdmin: false },
     create: {
       email: "exec@iprojectx.com",
       name: "Jordan Lee",
       passwordHash,
+      isPlatformAdmin: false,
     },
   });
 
@@ -205,6 +222,25 @@ async function main() {
         },
       });
     }
+
+    await db.projectBrief.create({
+      data: {
+        projectId: project.id,
+        strategicAlignment: `Supports ${def.theme} outcomes and enterprise ${def.portfolioCategory} priorities.`,
+        problemStatement: `Current-state gaps in ${def.name} are limiting delivery speed and measurable business value.`,
+        proposedSolution: `Deliver ${def.name} through a ${def.deliveryMethod.toLowerCase()} approach with gated funding and clear benefits tracking.`,
+        scope: `In-scope: core delivery for ${def.businessUnit}, integration readiness, and operational handover.`,
+        outOfScope: "Non-critical enhancements and unrelated legacy remediation.",
+        fundingAsk: def.funding || def.forecast,
+        expectedBenefits: `Target benefits ${def.benefitsTarget.toLocaleString()} with staged realisation through FY26/FY27.`,
+        keyRisks: "Delivery dependency, vendor performance, and data quality during transition.",
+        assumptions: "Sponsors remain engaged; key resources allocated at planned capacity.",
+        successMetrics: "On-time stage-gate approvals, benefits realisation %, stakeholder adoption.",
+        optionsConsidered: "Do nothing / tactical patch / full strategic investment (recommended).",
+        recommendation: "Proceed with staged funding under the assigned governance channel.",
+        stakeholderSummary: `Sponsor ${def.sponsor}; Delivery Lead ${def.deliveryLead}; PM ${def.pm}.`,
+      },
+    });
   }
 
   await db.risk.createMany({

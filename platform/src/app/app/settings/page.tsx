@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentContext, isAdminRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Badge, Card, PageHeader } from "@/components/ui";
-import { BillingForm, MembersForm } from "@/components/settings-forms";
+import { BillingForm, MembersForm, WorkspaceFeaturesForm } from "@/components/settings-forms";
 import { priceLabel } from "@/lib/plans";
 
 export default async function SettingsPage() {
@@ -78,6 +78,18 @@ export default async function SettingsPage() {
               {plan?.name} · {plan ? priceLabel(plan.monthlyPrice) : "—"}/mo. Contact an admin to change plans.
             </p>
           </Card>
+        )}
+
+        {admin ? (
+          <WorkspaceFeaturesForm
+            initial={{
+              enableExcelImport: ctx.organization.enableExcelImport,
+              enablePptExport: ctx.organization.enablePptExport,
+              enablePdfExport: ctx.organization.enablePdfExport,
+            }}
+          />
+        ) : (
+          <MembersForm canManage={false} />
         )}
 
         <MembersForm canManage={admin} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge, Button, Card, Input, Label } from "./ui";
 import { formatCurrency, formatPct } from "@/lib/utils";
@@ -187,7 +188,9 @@ export function ProjectsClient({
               {filtered.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    <div className="font-semibold">{p.name}</div>
+                    <Link href={`/app/projects/${p.id}`} className="font-semibold hover:text-[var(--brand-primary)]">
+                      {p.name}
+                    </Link>
                     <div className="text-xs text-[var(--ink-soft)]">
                       {p.code} · {p.pm || "Unassigned"}
                     </div>

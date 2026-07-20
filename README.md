@@ -23,7 +23,14 @@ npm run dev
 ```
 
 - App: http://localhost:3000
-- Demo login: `demo@iprojectx.com` / `demo1234`
+- Demo login: `demo@iprojectx.com` / `demo1234` (also Platform Admin)
+
+### Supabase (recommended production DB)
+
+1. Copy/paste/run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor  
+2. Follow [`supabase/README.md`](supabase/README.md) to wire `DATABASE_URL`  
+3. Use **Data & Exports** for Excel template download/upload and PPT/PDF packs  
+4. Use **Platform Admin** to configure landing page + global feature flags  
 
 See [`platform/README.md`](platform/README.md) for full SaaS documentation.
 

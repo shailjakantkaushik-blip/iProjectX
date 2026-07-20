@@ -19,6 +19,7 @@ export default async function AuthenticatedLayout({
       userName={ctx.user.name}
       role={ctx.membership.role}
       planName={ctx.organization.plan?.name || "Trial"}
+      isPlatformAdmin={ctx.user.isPlatformAdmin}
     >
       {children}
     </AppShell>

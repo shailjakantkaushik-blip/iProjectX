@@ -24,6 +24,32 @@ model Plan {
   createdAt       DateTime       @default(now())
 }
 
+/// Platform-owner landing page + global feature flags
+model SiteConfig {
+  id                  String   @id @default("default")
+  brandName           String   @default("iProjectX")
+  heroTitle           String   @default("The enterprise platform for portfolio, delivery, and outcomes.")
+  heroSubtitle        String   @default("Move from spreadsheet PMO tooling to a multi-tenant SaaS workspace with subscription seats, interactive delivery intelligence, and full white-label branding.")
+  heroCtaLabel        String   @default("Start 14-day trial")
+  heroCtaHref         String   @default("/signup")
+  secondaryCtaLabel   String   @default("View plans")
+  secondaryCtaHref    String   @default("/pricing")
+  primaryColor        String   @default("#0F766E")
+  accentColor         String   @default("#0284C7")
+  secondaryColor      String   @default("#134E4A")
+  logoUrl             String?
+  faviconUrl          String?
+  supportEmail        String?
+  footerText          String   @default("Enterprise project management & delivery")
+  showPricing         Boolean  @default(true)
+  showSignup          Boolean  @default(true)
+  enableExcelImport   Boolean  @default(true)
+  enablePptExport     Boolean  @default(true)
+  enablePdfExport     Boolean  @default(true)
+  featureCardsJson    String   @default("[]")
+  updatedAt           DateTime @updatedAt
+}
+
 /// Tenant / enterprise customer
 model Organization {
   id               String         @id @default(cuid())
@@ -48,6 +74,9 @@ model Organization {
   supportEmail     String?
   loginTagline     String?
   hidePoweredBy    Boolean        @default(false)
+  enableExcelImport Boolean       @default(true)
+  enablePptExport   Boolean       @default(true)
+  enablePdfExport   Boolean       @default(true)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   members          Membership[]
@@ -62,18 +91,21 @@ model Organization {
   sprints          Sprint[]
   updates          Update[]
   invitations      Invitation[]
+  importJobs       ImportJob[]
 }
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  name         String
-  passwordHash String
-  avatarUrl    String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  memberships  Membership[]
-  invitations  Invitation[] @relation("InvitedBy")
+  id              String       @id @default(cuid())
+  email           String       @unique
+  name            String
+  passwordHash    String
+  avatarUrl       String?
+  isPlatformAdmin Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  memberships     Membership[]
+  invitations     Invitation[] @relation("InvitedBy")
+  importJobs      ImportJob[]
 }
 
 model Membership {
@@ -165,9 +197,44 @@ model Project {
   resources          Resource[]
   sprints            Sprint[]
   releases           Release[]
+  brief              ProjectBrief?
 
   @@unique([organizationId, code])
   @@index([organizationId])
+}
+
+model ProjectBrief {
+  id                   String   @id @default(cuid())
+  projectId            String   @unique
+  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  strategicAlignment   String?
+  problemStatement     String?
+  proposedSolution     String?
+  scope                String?
+  outOfScope           String?
+  fundingAsk           Float    @default(0)
+  expectedBenefits     String?
+  keyRisks             String?
+  assumptions          String?
+  successMetrics       String?
+  optionsConsidered    String?
+  recommendation       String?
+  stakeholderSummary   String?
+  updatedAt            DateTime @updatedAt
+}
+
+model ImportJob {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?        @relation(fields: [userId], references: [id])
+  filename       String
+  status         String       @default("completed")
+  rowsUpserted   Int          @default(0)
+  errorCount     Int          @default(0)
+  summary        String?
+  createdAt      DateTime     @default(now())
 }
 
 model StageGate {

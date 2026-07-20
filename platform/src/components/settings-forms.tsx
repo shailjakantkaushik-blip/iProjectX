@@ -249,6 +249,80 @@ export function BillingForm({
   );
 }
 
+export function WorkspaceFeaturesForm({
+  initial,
+}: {
+  initial: {
+    enableExcelImport: boolean;
+    enablePptExport: boolean;
+    enablePdfExport: boolean;
+  };
+}) {
+  const router = useRouter();
+  const [form, setForm] = useState(initial);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    const res = await fetch("/api/settings/features", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Update failed");
+      return;
+    }
+    setMessage("Workspace feature flags updated.");
+    startTransition(() => router.refresh());
+  }
+
+  return (
+    <Card>
+      <h3 className="font-[family-name:var(--font-display)] text-xl">Workspace feature flags</h3>
+      <p className="mt-1 text-sm text-[var(--ink-soft)]">
+        Org-owner toggles (also gated by platform admin global switches).
+      </p>
+      <form onSubmit={onSubmit} className="mt-4 space-y-3">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.enableExcelImport}
+            onChange={(e) => setForm({ ...form, enableExcelImport: e.target.checked })}
+          />
+          Excel template download & upload
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.enablePptExport}
+            onChange={(e) => setForm({ ...form, enablePptExport: e.target.checked })}
+          />
+          PowerPoint executive export
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.enablePdfExport}
+            onChange={(e) => setForm({ ...form, enablePdfExport: e.target.checked })}
+          />
+          PDF executive export
+        </label>
+        {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+        {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+        <Button type="submit" disabled={pending}>
+          {pending ? "Saving…" : "Save features"}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
 export function MembersForm({
   canManage,
 }: {

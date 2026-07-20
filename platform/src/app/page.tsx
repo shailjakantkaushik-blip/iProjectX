@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MarketingNav } from "@/components/marketing-nav";
 import { Button } from "@/components/ui";
+import { getSiteConfig } from "@/lib/site-config";
 import {
   BarChart3,
   Building2,
@@ -12,43 +13,26 @@ import {
   Workflow,
 } from "lucide-react";
 
-const capabilities = [
-  {
-    icon: Gauge,
-    title: "Executive cockpit",
-    body: "Live RAG, funding burn, and portfolio health in one interactive command view.",
-  },
-  {
-    icon: Workflow,
-    title: "Stage-gate delivery",
-    body: "Channel A/B governance, milestones, agile sprints, and release registers.",
-  },
-  {
-    icon: BarChart3,
-    title: "Financial intelligence",
-    body: "CAPEX/OPEX, EVM signals, FY allocation, and benefit realisation tracking.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Enterprise controls",
-    body: "Role-based access, seat-based subscriptions, and audit-friendly operations.",
-  },
-  {
-    icon: Building2,
-    title: "White-label workspaces",
-    body: "Brand colors, logos, taglines, and custom domains per enterprise customer.",
-  },
-  {
-    icon: Users,
-    title: "Team delivery fabric",
-    body: "Resources, demand pipeline, decisions, actions, and program rollups.",
-  },
-];
+const ICONS = [Gauge, Workflow, BarChart3, ShieldCheck, Building2, Users];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const site = await getSiteConfig();
+
   return (
-    <div className="app-shell">
-      <MarketingNav />
+    <div
+      className="app-shell"
+      style={{
+        ["--brand-primary" as string]: site.primaryColor,
+        ["--brand-accent" as string]: site.accentColor,
+        ["--brand-secondary" as string]: site.secondaryColor,
+        ["--hero-glow" as string]: `${site.accentColor}33`,
+      }}
+    >
+      <MarketingNav
+        brandName={site.brandName}
+        showPricing={site.showPricing}
+        showSignup={site.showSignup}
+      />
 
       <section className="relative overflow-hidden">
         <div className="hero-media absolute inset-0" />
@@ -56,26 +40,30 @@ export default function HomePage() {
         <div className="relative mx-auto grid min-h-[86vh] w-full max-w-6xl items-center gap-10 px-6 pb-20 pt-10 md:grid-cols-[1.1fr_0.9fr]">
           <div className="motion-fade-up text-white">
             <p className="font-[family-name:var(--font-display)] text-5xl leading-[0.95] tracking-tight md:text-7xl">
-              iProjectX
+              {site.brandName}
             </p>
             <h1 className="mt-5 max-w-xl text-2xl font-medium leading-snug md:text-3xl">
-              The enterprise platform for portfolio, delivery, and outcomes.
+              {site.heroTitle}
             </h1>
-            <p className="mt-4 max-w-lg text-base text-white/85 md:text-lg">
-              Move from spreadsheet PMO tooling to a multi-tenant SaaS workspace with
-              subscription seats, interactive delivery intelligence, and full white-label branding.
-            </p>
+            <p className="mt-4 max-w-lg text-base text-white/85 md:text-lg">{site.heroSubtitle}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/signup">
-                <Button className="bg-white text-[var(--brand-secondary)] hover:bg-teal-50">
-                  Start 14-day trial
-                </Button>
-              </Link>
-              <Link href="/pricing">
-                <Button variant="secondary" className="border-0 bg-white/15 text-white ring-white/30 hover:bg-white/25">
-                  View plans
-                </Button>
-              </Link>
+              {site.showSignup ? (
+                <Link href={site.heroCtaHref}>
+                  <Button className="bg-white text-[var(--brand-secondary)] hover:bg-teal-50">
+                    {site.heroCtaLabel}
+                  </Button>
+                </Link>
+              ) : null}
+              {site.showPricing ? (
+                <Link href={site.secondaryCtaHref}>
+                  <Button
+                    variant="secondary"
+                    className="border-0 bg-white/15 text-white ring-white/30 hover:bg-white/25"
+                  >
+                    {site.secondaryCtaLabel}
+                  </Button>
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -118,17 +106,19 @@ export default function HomePage() {
           </p>
         </div>
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {capabilities.map((item, idx) => (
-            <article
-              key={item.title}
-              className="rounded-2xl bg-white/65 p-6 ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-              style={{ animationDelay: `${idx * 60}ms` }}
-            >
-              <item.icon className="h-5 w-5 text-[var(--brand-primary)]" />
-              <h3 className="mt-4 font-[family-name:var(--font-display)] text-xl">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--ink-soft)]">{item.body}</p>
-            </article>
-          ))}
+          {site.featureCards.map((item, idx) => {
+            const Icon = ICONS[idx % ICONS.length];
+            return (
+              <article
+                key={`${item.title}-${idx}`}
+                className="rounded-2xl bg-white/65 p-6 ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+              >
+                <Icon className="h-5 w-5 text-[var(--brand-primary)]" />
+                <h3 className="mt-4 font-[family-name:var(--font-display)] text-xl">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--ink-soft)]">{item.body}</p>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -145,17 +135,19 @@ export default function HomePage() {
                 while billing seats on Starter, Professional, or Enterprise plans.
               </p>
             </div>
-            <Link href="/signup">
-              <Button className="bg-white text-[var(--brand-secondary)] hover:bg-teal-50">
-                Create your workspace
-              </Button>
-            </Link>
+            {site.showSignup ? (
+              <Link href={site.heroCtaHref}>
+                <Button className="bg-white text-[var(--brand-secondary)] hover:bg-teal-50">
+                  {site.heroCtaLabel}
+                </Button>
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>
 
       <footer className="border-t border-[var(--line)] py-8 text-center text-sm text-[var(--ink-soft)]">
-        © {new Date().getFullYear()} iProjectX · Enterprise project management & delivery
+        © {new Date().getFullYear()} {site.brandName} · {site.footerText}
       </footer>
     </div>
   );

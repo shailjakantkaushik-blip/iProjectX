@@ -10,9 +10,13 @@ This is the modern web product that replaces the legacy Streamlit + Excel deskto
 - **Multi-tenant organizations** with role-based access (`owner`, `admin`, `executive`, `bu_lead`, `pm`)
 - **Seat-based subscriptions**: Starter / Professional / Enterprise
 - **White-label branding**: brand name, colors, logo URL, tagline, custom domain (plan-gated)
+- **Supabase-ready Postgres schema** (`../supabase/schema.sql`)
+- **Excel round-trip**: download template → fill → upload → upsert DB
+- **Executive PPT/PDF export** including business-case infographic slides
+- **Platform Admin** controls landing page + global feature flags
 - **Delivery OS modules**:
   - Executive cockpit
-  - Projects & programs
+  - Projects & programs (+ project infographic / business case)
   - Stage-gate delivery
   - Financials & benefits
   - Risks
@@ -20,7 +24,8 @@ This is the modern web product that replaces the legacy Streamlit + Excel deskto
   - Resources
   - Agile sprints & releases
   - Governance (decisions / actions)
-  - Workspace settings (billing, seats, members, branding)
+  - Data & Exports
+  - Workspace settings (billing, seats, members, branding, feature flags)
 
 ## Quick start
 
@@ -51,14 +56,17 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment
 
-See `.env`:
+See `.env.example`. Local demo defaults to SQLite. For production, run the SQL in `../supabase/schema.sql` and point `DATABASE_URL` at Supabase (see `../supabase/README.md`).
 
-```env
-DATABASE_URL="file:./dev.db"
-AUTH_SECRET="change-me"
-NEXT_PUBLIC_APP_NAME="iProjectX"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-```
+## Excel import / executive export
+
+- App → **Data & Exports**
+- Download blank or current workbook, edit, upload
+- Download PPT or PDF executive pack (all modules + business cases)
+
+## Platform admin
+
+Demo owner `demo@iprojectx.com` is a platform admin. Use **Platform Admin** to configure landing page copy, colors, and global Excel/PPT/PDF toggles.
 
 ## Legacy app
 
