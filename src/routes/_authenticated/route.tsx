@@ -10,12 +10,26 @@ export const Route = createFileRoute("/_authenticated")({
 function Gate() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth", replace: true });
   }, [session, loading, navigate]);
 
-  if (loading || !session) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Loading…</div>;
+  // Only block on auth bootstrap — do not require profile here
+  // (missing org is handled by /app → /onboarding)
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
+  if (!session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading…
+      </div>
+    );
   }
   return <Outlet />;
 }

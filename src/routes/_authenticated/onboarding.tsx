@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 });
 
 function Onboarding() {
-  const { organization, refresh, loading, profile } = useAuth();
+  const { organization, refresh, loading, profile, error, session } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
@@ -23,17 +23,45 @@ function Onboarding() {
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!session?.user) return toast.error("Not signed in");
     const fd = new FormData(e.currentTarget);
     const name = String(fd.get("name")).trim();
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Math.random().toString(36).slice(2, 6);
     setBusy(true);
-    const { error } = await supabase.rpc("create_org_and_join", { _name: name, _slug: slug });
+
+    // Ensure a profiles row exists before the RPC updates org_id
+    if (!profile) {
+      const email = session.user.email ?? "";
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: session.user.id,
+        email,
+        full_name:
+          (typeof session.user.user_metadata?.full_name === "string" &&
+            session.user.user_metadata.full_name) ||
+          email ||
+          null,
+      });
+      if (profileError) {
+        setBusy(false);
+        return toast.error(profileError.message);
+      }
+    }
+
+    const { error: rpcError } = await supabase.rpc("create_org_and_join", { _name: name, _slug: slug });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (rpcError) return toast.error(rpcError.message);
     toast.success("Organization created");
     await refresh();
     navigate({ to: "/app", replace: true });
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/20 px-4">
@@ -41,6 +69,7 @@ function Onboarding() {
         <CardHeader>
           <CardTitle>Welcome{profile?.full_name ? `, ${profile.full_name}` : ""}</CardTitle>
           <CardDescription>Create your organization to get started. You'll be the org admin.</CardDescription>
+          {error ? <p className="pt-2 text-sm text-destructive">{error}</p> : null}
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
