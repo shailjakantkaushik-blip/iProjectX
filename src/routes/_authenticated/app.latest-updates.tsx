@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type ActivityLog } from "@/lib/domain";
+import { useDomainData, type ActivityLog } from "@/lib/portfolio-engine";
 import { supabase } from "@/integrations/supabase/client";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
 import {
   EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton, SectionFrame,
 } from "@/components/streamlit";

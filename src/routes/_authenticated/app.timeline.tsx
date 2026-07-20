@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type StageGate } from "@/lib/domain";
-import { fmtMoney } from "@/lib/portfolio-engine";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
+import { useDomainData, fmtMoney, type StageGate } from "@/lib/portfolio-engine";
 import {
   EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton, RagChip, SectionFrame,
 } from "@/components/streamlit";

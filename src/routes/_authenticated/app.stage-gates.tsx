@@ -4,12 +4,12 @@ import {
   Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type StageGate } from "@/lib/domain";
+import { useDomainData, type StageGate } from "@/lib/portfolio-engine";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
   SectionFrame, StatusChip,
 } from "@/components/streamlit";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
 
 export const Route = createFileRoute("/_authenticated/app/stage-gates")({
   component: StageGatesPage,

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type Release } from "@/lib/domain";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { useDomainData, type Release } from "@/lib/portfolio-engine";
+import { exportPageCsv } from "@/lib/excel";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
   SectionFrame, StatusChip,

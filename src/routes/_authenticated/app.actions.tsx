@@ -4,12 +4,12 @@ import {
   Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type ActionItem } from "@/lib/domain";
+import { useDomainData, type ActionItem } from "@/lib/portfolio-engine";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
   SectionFrame, StatusChip,
 } from "@/components/streamlit";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
 
 export const Route = createFileRoute("/_authenticated/app/actions")({
   component: ActionsPage,

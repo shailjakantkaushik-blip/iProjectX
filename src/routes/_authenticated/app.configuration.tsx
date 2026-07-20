@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { CHANNEL_A_STAGES, CHANNEL_B_STAGES, useDomainData } from "@/lib/domain";
-import { deriveChannel, portfolioCategory } from "@/lib/portfolio-engine";
+import { CHANNEL_A_STAGES, CHANNEL_B_STAGES, useDomainData, deriveChannel, portfolioCategory } from "@/lib/portfolio-engine";
 import {
   EmptyState, KpiCard, PageHeading, PageSkeleton, SectionFrame, SectionTitle,
 } from "@/components/streamlit";

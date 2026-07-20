@@ -5,18 +5,17 @@ import {
   Tooltip, XAxis, YAxis, ZAxis,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { scorePipeline, useDomainData, type PipelineIdea } from "@/lib/domain";
-import { fmtMoney } from "@/lib/portfolio-engine";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
   SectionFrame, StatusChip,
 } from "@/components/streamlit";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { scorePipeline, useDomainData, fmtMoney, type PipelineIdea } from "@/lib/portfolio-engine";
 
 export const Route = createFileRoute("/_authenticated/app/demand-pipeline")({
   component: DemandPipelinePage,

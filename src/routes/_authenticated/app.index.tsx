@@ -22,18 +22,9 @@ import {
   type SheetColumn,
 } from "@/components/streamlit";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData } from "@/lib/domain";
-import {
-  budgetForecastByFy,
-  computeProjectHealth,
-  executiveKpis,
-  fmtMoney,
-  segmentSummary,
-  type ProjectHealth,
-  type SegmentRow,
-} from "@/lib/portfolio-engine";
 import { claimOrphanProjects, seedSamplePortfolio } from "@/lib/sample-portfolio";
 import { Button } from "@/components/ui/button";
+import { useDomainData, budgetForecastByFy, computeProjectHealth, executiveKpis, fmtMoney, segmentSummary, type ProjectHealth, type SegmentRow } from "@/lib/portfolio-engine";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: ExecutiveCockpit,

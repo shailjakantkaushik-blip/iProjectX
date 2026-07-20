@@ -4,12 +4,12 @@ import {
   Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { riskBand, useDomainData } from "@/lib/domain";
+import { riskBand, useDomainData } from "@/lib/portfolio-engine";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton, RagChip,
   SectionFrame, SectionTitle, StatusChip,
 } from "@/components/streamlit";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
 
 export const Route = createFileRoute("/_authenticated/app/risks")({
   component: RisksPage,

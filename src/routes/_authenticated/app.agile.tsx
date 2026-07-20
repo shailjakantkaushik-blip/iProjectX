@@ -5,8 +5,8 @@ import {
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type Sprint } from "@/lib/domain";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { useDomainData, type Sprint } from "@/lib/portfolio-engine";
+import { exportPageCsv } from "@/lib/excel";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
   SectionFrame, StatusChip,

@@ -5,9 +5,8 @@ import {
   ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type Project } from "@/lib/domain";
-import { fmtMoney } from "@/lib/portfolio-engine";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
+import { useDomainData, fmtMoney, type Project } from "@/lib/portfolio-engine";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton, SectionFrame,
 } from "@/components/streamlit";

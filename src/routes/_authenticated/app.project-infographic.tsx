@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, CHANNEL_A_STAGES, CHANNEL_B_STAGES } from "@/lib/domain";
-import { fmtMoney, progressPct } from "@/lib/portfolio-engine";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
+import { useDomainData, CHANNEL_A_STAGES, CHANNEL_B_STAGES, fmtMoney, progressPct } from "@/lib/portfolio-engine";
 import {
   EmptyState, ExportBar, PageHeading, PageSkeleton, RagChip, SectionFrame,
 } from "@/components/streamlit";

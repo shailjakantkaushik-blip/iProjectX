@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import { PageHeading, SectionFrame, SectionTitle, KpiCard, RagChip, PageSkeleton } from "@/components/streamlit";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData, type Project } from "@/lib/domain";
+import { useDomainData, type Project } from "@/lib/portfolio-engine";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/app/executive")({

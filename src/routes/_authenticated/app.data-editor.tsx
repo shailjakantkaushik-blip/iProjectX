@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, canEditProjects } from "@/lib/auth-context";
-import { useDomainData } from "@/lib/domain";
+import { useDomainData } from "@/lib/portfolio-engine";
 import {
   PageHeading, PageSkeleton, SectionFrame, SectionTitle, KpiCard, SortableSheet,
   type SheetColumn,

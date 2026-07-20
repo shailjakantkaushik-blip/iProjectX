@@ -5,10 +5,9 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { useDomainData } from "@/lib/domain";
-import { fmtMoney, PORTFOLIO_CATEGORIES, portfolioCategory } from "@/lib/portfolio-engine";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
 import { supabase } from "@/integrations/supabase/client";
+import { useDomainData, fmtMoney, PORTFOLIO_CATEGORIES, portfolioCategory } from "@/lib/portfolio-engine";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton, RagChip, SectionFrame,
 } from "@/components/streamlit";

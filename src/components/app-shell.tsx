@@ -6,9 +6,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, isAdmin } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
-import { FY_OPTIONS, useFyFilter } from "@/lib/fy-filter";
-import { fetchDomainBundle } from "@/lib/domain";
-import { exportPortfolioBriefing } from "@/lib/ppt-export";
+import { exportPortfolioBriefing } from "@/lib/excel";
+import { FY_OPTIONS, useFyFilter, fetchDomainBundle } from "@/lib/portfolio-engine";
 import {
   CommandDialog,
   CommandEmpty,

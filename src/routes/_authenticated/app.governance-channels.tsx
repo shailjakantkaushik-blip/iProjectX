@@ -4,13 +4,12 @@ import {
   Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { useAuth } from "@/lib/auth-context";
-import { CHANNEL_A_STAGES, CHANNEL_B_STAGES, useDomainData, type Project } from "@/lib/domain";
-import { fmtMoney } from "@/lib/portfolio-engine";
 import {
   ChartCaption, EmptyState, ExportBar, KpiCard, PageHeading, PageSkeleton,
   RagChip, SectionFrame, StatusChip,
 } from "@/components/streamlit";
-import { exportPageCsv } from "@/lib/ppt-export";
+import { exportPageCsv } from "@/lib/excel";
+import { CHANNEL_A_STAGES, CHANNEL_B_STAGES, useDomainData, fmtMoney, type Project } from "@/lib/portfolio-engine";
 
 export const Route = createFileRoute("/_authenticated/app/governance-channels")({
   component: GovernanceChannelsPage,
