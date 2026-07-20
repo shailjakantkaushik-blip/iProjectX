@@ -26,8 +26,9 @@ Settings → General:
 
 Settings → Environment Variables (Production + Preview), then redeploy:
 
-- `DATABASE_URL`
-- `DIRECT_URL`
+- `DATABASE_URL` (Supabase **pooler** URI, `postgresql://…`)
+- `DIRECT_URL` (Supabase **direct** URI on port 5432, `postgresql://…`)  
+  Prisma is configured for **PostgreSQL** (not SQLite). Both URLs are required.
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`

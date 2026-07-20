@@ -57,6 +57,7 @@ export type EnvCheck = {
 
 const REQUIRED = [
   "DATABASE_URL",
+  "DIRECT_URL",
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
 ] as const;
@@ -80,26 +81,27 @@ export function checkEnv(): EnvCheck {
     const value =
       key === "DATABASE_URL"
         ? env.databaseUrl
-        : key === "NEXT_PUBLIC_SUPABASE_URL"
-          ? env.supabaseUrl
-          : env.supabaseAnonKey;
+        : key === "DIRECT_URL"
+          ? env.directUrl
+          : key === "NEXT_PUBLIC_SUPABASE_URL"
+            ? env.supabaseUrl
+            : env.supabaseAnonKey;
     if (value) present.push(key);
     else missing.push(key);
   }
 
   for (const key of OPTIONAL) {
+    if (key === "DIRECT_URL") continue; // already required
     const value =
-      key === "DIRECT_URL"
-        ? env.directUrl
-        : key === "SUPABASE_SERVICE_ROLE_KEY"
-          ? env.supabaseServiceRoleKey
-          : key === "NEXT_PUBLIC_APP_URL"
-            ? env.appUrl
-            : key === "STRIPE_SECRET_KEY"
-              ? env.stripeSecretKey
-              : key === "STRIPE_WEBHOOK_SECRET"
-                ? env.stripeWebhookSecret
-                : env.stripePublishableKey;
+      key === "SUPABASE_SERVICE_ROLE_KEY"
+        ? env.supabaseServiceRoleKey
+        : key === "NEXT_PUBLIC_APP_URL"
+          ? env.appUrl
+          : key === "STRIPE_SECRET_KEY"
+            ? env.stripeSecretKey
+            : key === "STRIPE_WEBHOOK_SECRET"
+              ? env.stripeWebhookSecret
+              : env.stripePublishableKey;
     if (value) present.push(key);
   }
 
