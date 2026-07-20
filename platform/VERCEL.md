@@ -1,34 +1,31 @@
-# Vercel deployment (fix 404 NOT_FOUND)
+# Vercel deployment
 
-## Why you see `404: NOT_FOUND` (Code: NOT_FOUND, ID: syd1::…)
+## Fix: `No Next.js version detected`
 
-This repo is a **monorepo**:
+This means Vercel is **not** using the `platform/` folder (where `next` lives in `package.json`).
 
-- Repo **root** = legacy Streamlit/Python app (no Next.js)
-- **`platform/`** = the real Next.js SaaS app
+### Do this in the Vercel dashboard
 
-If Vercel’s **Root Directory** is `.` (repo root), the deploy has nothing valid to serve → **404 NOT_FOUND**.
-
-## Fix (required)
-
-1. Open [Vercel Dashboard](https://vercel.com/dashboard) → your project  
-2. **Settings → General → Root Directory**  
-3. Click **Edit** → set to:
+1. Open your project → **Settings**
+2. **General** → **Root Directory** → **Edit**
+3. Set Root Directory to exactly:
 
    ```text
    platform
    ```
 
+   (not `.`, not `/`, not blank)
+
 4. **Save**
-5. **Settings → Build & Development Settings**
-   - Framework Preset: **Next.js**
-   - Build Command: leave default / `prisma generate && next build` (from `platform/package.json`)
-   - Output Directory: **leave empty** (do not set `.next` manually)
-6. **Deployments → … on latest → Redeploy** (or push a new commit)
+5. **Build and Deployment** → **Framework Preset** = **Next.js**
+6. Clear any custom **Output Directory** (must be empty for Next.js)
+7. **Deployments** → open latest → **Redeploy** → check “Use existing Build Cache” **off**
 
-## Environment variables
+After this, the build log should show install/build running inside `platform/` and find `next@16.x`.
 
-Still set these under **Settings → Environment Variables** (Production + Preview):
+## Required env vars
+
+**Settings → Environment Variables** (Production + Preview):
 
 - `DATABASE_URL`
 - `DIRECT_URL`
@@ -36,23 +33,15 @@ Still set these under **Settings → Environment Variables** (Production + Previ
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_PUBLIC_APP_NAME`
-- `NEXT_PUBLIC_APP_URL` (your `https://….vercel.app` URL)
-
-Then redeploy.
+- `NEXT_PUBLIC_APP_URL`
 
 ## Verify
-
-After a successful deploy:
 
 ```bash
 curl https://YOUR_APP.vercel.app/api/health
 ```
 
-Expect `"ok": true` and `"source": "vercel"`.
-
-Home page `/` and `/login` should load (not the Vercel NOT_FOUND page).
-
-## Local pull from Vercel
+## Local
 
 ```bash
 cd platform
